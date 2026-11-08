@@ -1,0 +1,29 @@
+POST
+Series: Missed Call Monday
+Hook: I lose a job every time I miss a call on the truck.
+Points:
+- On the truck or in the attic, the phone rings and you cannot answer.
+- After hours, the caller tries the next company on the list.
+- A voicemail that is returned late is often a lost job.
+- Busy season means more calls and fewer hands to answer them.
+CTA: Save this for your next team meeting.
+Hashtags: #tradesbusiness #smallbusiness #customerservice
+---
+POST
+Series: No-Show Teardown
+Hook: Every empty appointment slot is money you cannot get back.
+Points:
+- Write down how many no-shows you had last month.
+- Multiply by what one appointment is worth.
+- Decide what reminder would have prevented the first three.
+- Test that reminder for two weeks.
+CTA: What is your no-show number? Tell us in the comments.
+Hashtags: #clinicmanagement #appointments
+Platforms: linkedin facebook
+---
+POST
+Hook: More leads is not your problem. Your phone is.
+Quote: More leads is not your problem. Your phone is.
+Attribution: Cogwell
+Formats: instagram_single facebook_post
+CTA: Follow for weekly fixes.

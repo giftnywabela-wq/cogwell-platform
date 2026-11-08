@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html><head>
+<!--OS_BOOT-->
+<script>
+/* Cogwell platform bridge: lets every page keep its original google.script.run code. */
+window.OSRUN = function (mod) {
+  function make(ok, no) {
+    return new Proxy({}, {
+      get: function (_, k) {
+        if (k === 'then') return undefined;
+        if (k === 'withSuccessHandler') return function (f) { return make(f, no); };
+        if (k === 'withFailureHandler') return function (f) { return make(ok, f); };
+        if (k === 'withUserObject') return function () { return make(ok, no); };
+        return function () {
+          var args = Array.prototype.slice.call(arguments);
+          google.script.run
+            .withSuccessHandler(function (raw) {
+              var o;
+              try { o = JSON.parse(raw); } catch (e) { if (no) no(e); return; }
+              if (o.err) {
+                if (o.err === 'Not signed in') window.OS_expired && window.OS_expired();
+                if (no) no({ message: o.err, name: 'Error' });
+              } else if (ok) { ok(o.v); }
+            })
+            .withFailureHandler(function (e) { if (no) no(e); })
+            .osApi(window.OS_TOKEN || '', mod, String(k), JSON.stringify(args));
+        };
+      }
+    });
+  }
+  return make(null, null);
+};
+window.OS_expired = function () {
+  if (document.getElementById('os-expired')) return;
+  var d = document.createElement('div'); d.id = 'os-expired';
+  d.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99999;background:#b42318;color:#fff;padding:10px 16px;font:600 14px system-ui,sans-serif;text-align:center';
+  d.textContent = 'Your session expired. Reload this page and sign in again.';
+  document.body.appendChild(d);
+  try { parent.postMessage({ cogwell: 'signedout' }, '*'); } catch (e) {}
+};
+</script>
+<base target="_top"><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&display=swap">
+<style>
+:root{--radius:1.25rem;--background:#f7f9ff;--foreground:#0f2347;--card:oklch(100% 0 0);--primary:#0f2347;--primary-foreground:#f7f9ff;--secondary:#eef3fc;--muted-foreground:#5d6b88;--accent:#6ea8ff;--accent-foreground:#0f2347;--destructive:oklch(57.7% .245 27.325);--border:#d9e3f5;--ring:#6ea8ff;--hot:oklch(64.6% .222 41.116);--font-display:"Outfit",ui-sans-serif,system-ui,sans-serif;--font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","Noto Sans",Arial,sans-serif;color-scheme:light dark}
+@media(prefers-color-scheme:dark){:root{--background:oklch(20% .035 163);--foreground:oklch(95% .02 130);--card:oklch(25% .045 163);--primary:#6ea8ff;--primary-foreground:#0f2347;--secondary:oklch(30% .04 163);--muted-foreground:oklch(72% .03 150);--border:oklch(100% 0 0/.12);--destructive:oklch(70.4% .191 22.2)}}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 var(--font-sans);background:var(--background);color:var(--foreground)}
+main{max-width:920px;margin:0 auto;padding:28px 16px}
+h1,h2{font-family:var(--font-display);font-weight:600;letter-spacing:-.025em}
+h1{font-size:28px;margin:0 0 4px}h2{font-size:18px;margin:26px 0 10px}
+p,small{color:var(--muted-foreground)}
+input,select,textarea{font:inherit;padding:10px 14px;border:1px solid var(--border);border-radius:.75rem;background:var(--card);color:var(--foreground)}
+input:focus-visible,select:focus-visible{outline:none;border-color:var(--ring);box-shadow:0 0 0 3px color-mix(in oklch,var(--ring) 35%,transparent)}
+button{font:inherit;font-weight:500;padding:10px 20px;border:0;border-radius:9999px;background:var(--primary);color:var(--primary-foreground);cursor:pointer;transition:opacity .15s}
+button:hover{opacity:.9}button:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+nav{display:flex;gap:6px;margin:16px 0;flex-wrap:wrap}
+nav button{background:var(--secondary);color:var(--foreground);padding:8px 16px}
+nav button.on{background:var(--accent);color:var(--accent-foreground);font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;color:var(--muted-foreground)}
+.stat b{display:block;font:600 34px/1.1 var(--font-display);letter-spacing:-.025em;color:var(--foreground)}
+.scroll{overflow-x:auto}
+table{border-collapse:separate;border-spacing:0;width:100%;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+th{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted-foreground);background:var(--secondary)}
+td,th{padding:12px 14px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+tr:last-child td{border-bottom:0}
+.hot{color:var(--hot);font-weight:600}.err{color:var(--destructive)}
+.row{display:flex;gap:8px;flex-wrap:wrap}.hide{display:none}
+pre{white-space:pre-wrap;font:inherit;background:var(--secondary);padding:14px 16px;border-radius:.75rem;margin:8px 0}
+ul{padding-left:20px}
+</style><style id="cw-skin">@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
+:root,.dark{color-scheme:light;--primary:#1b6bff!important;--primary-foreground:#fff!important;--accent:#6ea8ff!important;--accent-foreground:#0f2347!important;--font-display:'Outfit',ui-sans-serif,system-ui,sans-serif!important}
+html,body,button,input,select,textarea{font-family:'Outfit',system-ui,sans-serif!important}
+body{background:#fff!important;color:#0f2347!important}
+body::before{content:"";position:fixed;left:0;right:0;bottom:0;height:58vh;z-index:-1;pointer-events:none;background:repeating-linear-gradient(90deg,rgba(255,255,255,.22) 0 44px,rgba(255,255,255,0) 44px 88px),linear-gradient(180deg,rgba(255,255,255,0) 0,#dbe8ff 38%,#86adff 72%,#2f6bff 100%)}
+h1,h2,h3,h4{color:#0f2347!important;font-family:'Outfit',system-ui,sans-serif!important;letter-spacing:-.02em}
+h1{text-transform:uppercase;font-weight:800!important}
+a{color:#1b6bff}
+button:not([class*=tab]):not([class*=ghost]):not([class*=alt]):not([class*=link]):not([class*=icon]):not([class*=chip]),.btn:not(.alt),input[type=submit],input[type=button]{background:linear-gradient(180deg,#4b8bff,#1b62f0)!important;color:#fff!important;border:0!important;border-radius:9999px!important;box-shadow:0 8px 18px rgba(27,107,255,.35),inset 0 1px 0 rgba(255,255,255,.35)}
+input,select,textarea{background:rgba(255,255,255,.92)!important;color:#0f2347!important;border:1px solid #d9e3f5!important;border-radius:12px!important}
+input[type=checkbox],input[type=radio]{accent-color:#1b6bff}
+th{background:#eef3fc!important;color:#0f2347!important}td,th{border-color:#d9e3f5!important}
+.card,.panel,.box,.tile,.kpi,[class*="card"]{background:rgba(255,255,255,.74)!important;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.9)!important;border-radius:20px!important;box-shadow:0 10px 30px rgba(15,35,71,.10)!important}
+</style></head><body><main>
+<section id="login"><h1>Log in</h1><p>Enter the email address you were invited with. We will send a 6-digit code.</p>
+<div class="row"><input id="email" type="email" placeholder="you@company.com" autocomplete="email"><button onclick="sendCode()">Send code</button></div>
+<div id="codeBox" class="row hide" style="margin-top:10px"><input id="code" inputmode="numeric" placeholder="123456"><button onclick="verify()">Log in</button></div></section>
+
+<section id="terms" class="hide"><h1>Terms and privacy</h1>
+<pre>PLACEHOLDER: replace with your reviewed terms, privacy notice and data processing agreement.
+By continuing you agree that this platform processes your customers' personal information (names, phone numbers, chat messages) on your behalf, and that AI-generated replies are based on the knowledge base you provide.</pre>
+<label><input type="checkbox" id="agree"> I have read and accept the terms</label> <button onclick="accept()">Accept and continue</button></section>
+
+<section id="app" class="hide"><h1 id="biz"></h1><div id="mode"></div>
+<nav id="tabs"></nav><div id="view"></div></section>
+<p id="msg" class="err" role="alert"></p>
+
+<script>
+let token = sessionStorage.getItem('t') || '', ME = null;
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function call(action, extra) {
+  return new Promise((res, rej) => OSRUN('platform')
+    .withSuccessHandler(r => { r = JSON.parse(r); r.ok ? res(r.data) : rej(new Error(r.error)); })
+    .withFailureHandler(rej).apiRun(JSON.stringify(Object.assign({action, token}, extra || {}))));
+}
+function show(id) { ['login','terms','app'].forEach(x => $(x).classList.toggle('hide', x !== id)); }
+function fail(e) { $('msg').textContent = e.message; if (/Session/.test(e.message)) { sessionStorage.clear(); token = ''; show('login'); } }
+async function sendCode() { $('msg').textContent = ''; try { await call('requestCode', {email: $('email').value}); $('codeBox').classList.remove('hide'); $('msg').textContent = 'If that email is invited, a code is on its way.'; } catch (e) { fail(e); } }
+async function verify() { try { const r = await call('verifyCode', {email: $('email').value, code: $('code').value}); token = r.token; sessionStorage.setItem('t', token); $('msg').textContent = ''; boot(); } catch (e) { fail(e); } }
+async function accept() { if (!$('agree').checked) return fail(new Error('Tick the box to accept the terms.')); try { await call('acceptTerms'); boot(); } catch (e) { fail(e); } }
+async function boot() {
+  if (!token) return show('login');
+  try { ME = await call('me'); } catch (e) { return fail(e); }
+  if (!ME.termsOk) return show('terms');
+  $('biz').textContent = ME.tenant.name;
+  $('mode').textContent = ME.tenant.mode === 'live' ? 'Automations are live.' : 'Setup mode: leads are logged, but no alert emails are sent yet.';
+  $('tabs').innerHTML = ['Home','Leads','Chats','Knowledge base','Routing','Automations','Reports','Team','Settings','Support','Embed'].concat(ME.role === 'admin' ? ['Admin'] : []).map(t => `<button onclick="tab('${t}',this)">${t}</button>`).join('');
+  show('app'); tab('Home', $('tabs').firstChild);
+}
+async function tab(name, btn) {
+  [...$('tabs').children].forEach(b => b.classList.toggle('on', b === btn)); $('msg').textContent = '';
+  try { await ({'Home': home, 'Leads': leadsView, 'Chats': chatsView, 'Support': supportView, 'Admin': adminView, 'Routing': routingView, 'Automations': autoView, 'Settings': settingsView, 'Knowledge base': kbView, 'Reports': reportView, 'Team': teamView, 'Embed': embed}[name])(); } catch (e) { fail(e); }
+}
+async function setStatus(id, status) { try { await call('updateLead', {lead_id: id, status}); } catch (e) { fail(e); } }
+async function kbView() {
+  const k = await call('kbList');
+  $('view').innerHTML = '<h2>What the chat assistant knows</h2><div class="row"><input id="q" placeholder="Question, e.g. Do you work weekends?" size="34"><input id="a" placeholder="Answer" size="34"><button onclick="addKb()">Save answer</button></div>' + (k.length ? '<table>' + k.map(r => `<tr><td>${esc(r.question)}</td><td>${esc(r.answer)}</td></tr>`).join('') + '</table>' : '<p>Nothing saved yet. Add services, areas, price ranges and hours.</p>');
+}
+async function addKb() { try { await call('kbAdd', {question: $('q').value, answer: $('a').value}); kbView(); } catch (e) { fail(e); } }
+function embed() {
+  $('view').innerHTML = '<h2>Chat widget</h2><p>Host widget.js on your site, then paste this before the closing body tag:</p><pre>' + esc('<script src="widget.js" data-endpoint="' + location.origin + '/macros/s/YOUR_DEPLOYMENT_ID/exec" data-tenant="' + ME.tenant.id + '"><\/script>') + '</pre><p>Use the web app URL from Deploy, which ends in /exec.</p>';
+}
+async function reportView() {
+  const r = await call('report'), row = (n, x) => `<tr><td>${n}</td><td>${x.total}</td><td>${x.hot}</td><td>${x.won}</td><td>${esc(Object.keys(x.bySource).map(k => k + ' ' + x.bySource[k]).join(', ') || 'none')}</td></tr>`;
+  $('view').innerHTML = '<h2>Results</h2><div class="scroll"><table><tr><th>Period</th><th>Leads</th><th>Hot</th><th>Won</th><th>Sources</th></tr>' + row('Last 7 days', r.week) + row('Last 30 days', r.month) + '</table></div>';
+}
+async function teamView() {
+  const u = await call('teamList'), own = ME.role === 'owner';
+  $('view').innerHTML = '<h2>Team</h2><table>' + u.map(x => `<tr><td>${esc(x.email)}</td><td>${esc(x.role)}</td><td>${esc(x.status)}</td><td>${own && x.email !== ME.email ? `<button onclick="rmUser('${esc(x.email)}')">Remove</button>` : ''}</td></tr>`).join('') + '</table>' +
+    (own ? '<h2>Invite someone</h2><div class="row"><input id="ie" type="email" placeholder="name@company.com"><select id="ir"><option>manager</option><option>sales</option><option>viewer</option></select><button onclick="invite()">Send invite</button></div>' : '<p>Only the owner can invite or remove people.</p>');
+}
+async function invite() { try { await call('teamInvite', {email: $('ie').value, role: $('ir').value}); teamView(); } catch (e) { fail(e); } }
+async function rmUser(email) { try { await call('teamRemove', {email}); teamView(); } catch (e) { fail(e); } }
+async function autoView() {
+  const l = await call('runLog');
+  $('view').innerHTML = '<h2>Automations</h2><p>Website chat: on. Lead routing: ' + (ME.tenant.mode === 'live' ? 'live' : 'setup mode') + '.</p><h2>Recent activity</h2>' + (l.length ? '<div class="scroll"><table>' + l.map(x => `<tr><td>${esc(new Date(x.ts).toLocaleString())}</td><td>${esc(x.automation)}</td><td>${esc(x.result)}</td><td>${esc(x.detail)}</td></tr>`).join('') + '</table></div>' : '<p>Nothing has run yet.</p>');
+}
+async function routingView() {
+  const l = await call('routingList'), own = ME.role === 'owner';
+  $('view').innerHTML = '<h2>Who gets which leads</h2>' + (l.length ? '<table>' + l.map(x => `<tr><td>${esc(x.service)}</td><td>${esc(x.assignee_email)}</td></tr>`).join('') + '</table>' : '<p>No rules yet. Every lead goes to the owner.</p>') +
+    (own ? '<h2>Add a rule</h2><div class="row"><input id="rs" placeholder="Service, e.g. plumbing"><input id="ra" type="email" placeholder="assignee@company.com"><button onclick="addRule()">Save rule</button></div>' : '');
+}
+async function addRule() { try { await call('routingAdd', {service: $('rs').value, assignee: $('ra').value}); routingView(); } catch (e) { fail(e); } }
+let LF = 'all';
+async function leadsView() {
+  const all = await call('leads'), l = LF === 'all' ? all : all.filter(r => r.score === LF || r.status === LF);
+  $('view').innerHTML = '<div class="row"><select onchange="LF=this.value;leadsView()">' + ['all','hot','warm','cold','new','booked','won','lost'].map(x => `<option${x === LF ? ' selected' : ''}>${x}</option>`).join('') + '</select></div>' +
+    (l.length ? '<div class="scroll"><table><tr><th>Lead</th><th>Need</th><th>Score</th><th>Status</th><th>Notes</th></tr>' + l.map(r => `<tr><td>${esc(r.name)}<br>${esc(r.phone || r.email)}<br><small>${esc(r.source)}</small></td><td>${esc(r.service)}<br><small>${esc(r.message)}</small></td><td class="${r.score === 'hot' ? 'hot' : ''}">${esc(r.score)}</td><td><select onchange="setStatus('${esc(r.lead_id)}',this.value)">${['new','contacted','booked','won','lost'].map(s => `<option${s === r.status ? ' selected' : ''}>${s}</option>`).join('')}</select></td><td><input value="${esc(r.notes)}" onchange="setNotes('${esc(r.lead_id)}',this.value)"></td></tr>`).join('') + '</table></div>' : '<h2>No leads here</h2><p>Leads from chat and email appear here.</p>');
+}
+async function setNotes(id, notes) { try { await call('updateLead', {lead_id: id, notes}); } catch (e) { fail(e); } }
+async function chatsView() {
+  const r = await call('chats'), by = {};
+  r.messages.forEach(m => (by[m.session] = by[m.session] || []).push(m));
+  const ks = Object.keys(by).reverse();
+  $('view').innerHTML = '<h2>Recent chats</h2>' + (ks.length ? ks.map(k => '<pre>' + by[k].map(m => esc(m.role + ': ' + m.text)).join('\n') + `</pre><div class="row"><input id="r_${esc(k)}" placeholder="Reply to this visitor (pauses the AI for an hour)"><button onclick="replyTo('${esc(k)}')">Send</button></div>`).join('') : '<p>No chats yet. They appear once the widget is on your site.</p>') + '<h2>Questions it could not answer</h2>' + (r.unanswered.length ? '<ul>' + r.unanswered.map(u => `<li>${esc(u.question)}</li>`).join('') + '</ul><p>Add answers under Knowledge base.</p>' : '<p>None so far.</p>');
+}
+async function replyTo(sid) { try { await call('takeOver', {session: sid, text: $('r_' + sid).value}); chatsView(); } catch (e) { fail(e); } }
+async function supportView() {
+  const l = await call('supportList');
+  $('view').innerHTML = '<h2>Ask for help or a change</h2><div class="row"><input id="sp" size="50" placeholder="What do you need?"><button onclick="sendSupport()">Send</button></div><h2>Your requests</h2>' + (l.length ? '<table>' + l.map(x => `<tr><td>${esc(new Date(x.ts).toLocaleDateString())}</td><td>${esc(x.text)}</td><td>${esc(x.status)}</td></tr>`).join('') + '</table>' : '<p>None yet.</p>');
+}
+async function sendSupport() { try { await call('supportAdd', {text: $('sp').value}); supportView(); } catch (e) { fail(e); } }
+async function adminView() {
+  const t = await call('adminTenants'), e = await call('adminErrors');
+  $('view').innerHTML = '<h2>Clients</h2><table><tr><th>Client</th><th>State</th><th>Leads</th><th>Errors</th><th></th></tr>' + t.map(x => `<tr><td>${esc(x.name)}</td><td>${esc(x.status === 'paused' ? 'paused' : x.mode)}</td><td>${x.leads}</td><td>${x.errors}</td><td><select onchange="setMode('${esc(x.id)}',this.value)"><option value="">Change...</option><option>live</option><option>shadow</option><option>paused</option></select></td></tr>`).join('') + '</table><h2>Recent errors</h2>' + (e.length ? '<table>' + e.map(x => `<tr><td>${esc(new Date(x.ts).toLocaleString())}</td><td>${esc(x.tenant_id)}</td><td>${esc(x.automation)}</td><td>${esc(x.detail)}</td></tr>`).join('') + '</table>' : '<p>No errors logged.</p>');
+}
+async function setMode(id, mode) { if (!mode) return; try { await call('adminSetMode', {id, mode}); adminView(); } catch (e) { fail(e); } }
+async function home() {
+  const s = await call('stats'), c = await call('checklist');
+  const items = [[c.terms, 'Terms accepted'], [c.kb, 'Add at least 3 answers under Knowledge base'], [c.chat, 'Put the chat snippet on your website (see Embed) and send a test chat'], [c.lead, 'Capture a test lead'], [c.live, 'We switch you to live']];
+  $('view').innerHTML = (c.live ? '' : '<h2>Go-live checklist</h2><ul>' + items.map(i => `<li>${i[0] ? '&#10003;' : '&#9675;'} ${i[1]}</li>`).join('') + '</ul>') + '<div class="stats">' + [['New leads', s.fresh], ['Hot', s.hot], ['Warm', s.warm], ['Won', s.won], ['All leads', s.total]].map(x => `<div class="stat"><b>${x[1]}</b>${x[0]}</div>`).join('') + '</div>';
+}
+async function settingsView() {
+  if (ME.role !== 'owner' && ME.role !== 'admin') { $('view').innerHTML = '<p>Only the owner can change settings.</p>'; return; }
+  const s = await call('settingsGet');
+  $('view').innerHTML = `<h2>Business settings</h2><div class="row"><input id="st" value="${esc(s.tone)}" placeholder="Chat tone"><input id="sh" value="${esc(s.hours)}" placeholder="Opening hours"><input id="sl" type="number" value="${esc(s.sla_minutes || 15)}" title="Minutes before an uncontacted hot lead escalates"></div><h2>After-hours routing (Mon-Fri)</h2><div class="row"><input id="ws" type="number" min="0" max="24" value="${esc(s.work_start)}" placeholder="Start hour"><input id="we" type="number" min="0" max="24" value="${esc(s.work_end)}" placeholder="End hour"><input id="ah" type="email" value="${esc(s.after_hours_email)}" placeholder="After-hours email"><button onclick="saveSettings()">Save settings</button></div><h2>Terms accepted</h2>` + (s.terms.length ? '<table>' + s.terms.map(t => `<tr><td>${esc(t.email)}</td><td>${esc(t.version)}</td><td>${esc(new Date(t.accepted_at).toLocaleString())}</td></tr>`).join('') + '</table>' : '<p>None yet.</p>') + '<h2>Your data</h2><div class="row"><button onclick="exportAll()">Download all data</button><input id="ek" placeholder="Phone or email to erase"><button onclick="erase()">Erase lead</button></div>';
+}
+async function saveSettings() { try { await call('settingsSet', {tone: $('st').value, hours: $('sh').value, sla_minutes: $('sl').value, work_start: $('ws').value, work_end: $('we').value, after_hours_email: $('ah').value}); $('msg').textContent = 'Saved.'; } catch (e) { fail(e); } }
+async function exportAll() { try { const d = await call('exportData'), a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(d, null, 2)], {type: 'application/json'})); a.download = 'my-data.json'; a.click(); } catch (e) { fail(e); } }
+async function erase() { if (!confirm('Permanently delete every lead with this phone or email?')) return; try { const n = await call('eraseLead', {key: $('ek').value}); $('msg').textContent = n + ' lead(s) erased.'; } catch (e) { fail(e); } }
+boot();
+</script></main></body></html>

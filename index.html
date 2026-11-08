@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cogwell OS</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap">
+<style>
+:root{--ink:#0f2347;--g:#1b6bff;--lime:#6ea8ff;--bg:#f7f9ff;--sage:#eef3fc;--line:#d9e3f5;--mute:#5d6b88;--bad:#b42318;--glass:rgba(255,255,255,.74);--sh:0 10px 30px rgba(15,35,71,.10)}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 Outfit,system-ui,sans-serif;color:var(--ink);min-height:100vh;background:#fff}
+#hdr{position:sticky;top:0;z-index:5;background:rgba(255,255,255,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);padding:12px max(16px,calc((100% - 1100px)/2));display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:19px}
+.logo img{width:32px;height:32px;border-radius:10px;background:#fff;padding:3px;box-shadow:0 2px 8px rgba(15,35,71,.15)}
+.tabs{display:flex;gap:2px;flex-wrap:wrap;margin:0 auto}
+.tabs button,.chips button{font:inherit;background:none;border:0;color:var(--ink);padding:7px 14px;border-radius:9999px;cursor:pointer}
+.tabs button.on{background:#e3edff;color:var(--ink);font-weight:600}
+.chips{display:flex;gap:6px;flex-wrap:wrap;max-width:1100px;margin:12px auto 0;padding:0 12px}
+.chips button{background:var(--glass);border:1px solid rgba(255,255,255,.85);backdrop-filter:blur(10px);font-size:14px}
+.chips button.on{background:#fff;font-weight:600;box-shadow:var(--sh)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--lime);outline-offset:2px}
+main{padding:18px 12px 48px;max-width:1124px;margin:0 auto}
+h1{font-size:36px;line-height:1.1;letter-spacing:-.02em;margin:10px 0 6px}
+h2{font-size:16px;margin:26px 0 10px}
+main>h2{display:inline-block;background:var(--glass);backdrop-filter:blur(8px);padding:5px 16px;border-radius:9999px;border:1px solid rgba(255,255,255,.85)}
+.sub{color:var(--mute);margin:0 0 20px}
+.banner{background:var(--glass);border:1px solid rgba(255,255,255,.85);border-radius:16px;padding:10px 14px;margin-bottom:16px;font-size:14px}
+.gauge{background:linear-gradient(135deg,#2f7bff,#1450d6);color:var(--bg);border-radius:24px;padding:24px 28px;display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:center;box-shadow:0 16px 36px rgba(15,35,71,.3)}
+.gauge .n{font-size:60px;line-height:1;font-weight:700}
+.gauge small{display:block;opacity:.8;font-size:14px;margin-top:6px}
+.bar{position:relative;height:14px;background:#1243b3;border-radius:9px}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--lime);border-radius:9px;max-width:100%}
+.bar u{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--bg)}
+.bar span{position:absolute;top:20px;font-size:12px;opacity:.85;transform:translateX(-50%)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-top:14px}
+.kpi,.card,form.grid,table,.todo,.empty,.col{background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.9);box-shadow:var(--sh)}
+.kpi{border-radius:20px;padding:14px 16px}.kpi b{font-size:26px;display:block}.kpi span{color:var(--mute);font-size:13px}
+table{width:100%;border-collapse:separate;border-spacing:0;border-radius:20px;overflow:hidden}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);font-size:14px}
+th{background:rgba(238,243,252,.8);font-weight:600}tr:last-child td{border-bottom:0}
+.wrap{overflow-x:auto}
+.empty{color:var(--mute);padding:16px;border-radius:18px;border-style:dashed}
+.todo{display:flex;gap:10px;align-items:baseline;padding:11px 14px;border-left:4px solid var(--lime);border-radius:16px;margin-bottom:8px}
+.todo.late{border-left-color:var(--bad)}.todo b{min-width:96px}.todo span{color:var(--mute);margin-left:auto;font-size:13px}
+form.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;border-radius:22px;padding:18px}
+label{display:flex;flex-direction:column;font-size:13px;color:var(--mute);gap:3px}
+input,select,textarea{font:inherit;padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.9);color:var(--ink);min-width:0}
+.btn{font:inherit;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#4b8bff,#1b62f0);color:#fff;border:0;border-radius:9999px;padding:8px 22px 8px 8px;cursor:pointer;font-weight:600;align-self:end;box-shadow:0 10px 22px rgba(27,107,255,.4),inset 0 1px 0 rgba(255,255,255,.35)}
+.btn.alt{background:#fff;color:var(--ink);border:1px solid var(--line);box-shadow:none;padding:8px 16px}
+.board{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;align-items:start}
+.col{border-radius:22px;padding:10px}.col h3{font-size:14px;margin:4px 6px 8px}
+.card{border-radius:18px;padding:12px;margin-bottom:8px;display:grid;gap:6px;font-size:14px}.card small{color:var(--mute)}
+.chk{display:flex;gap:10px;align-items:center;padding:8px 4px;border-bottom:1px solid var(--line)}
+.chk input{width:18px;height:18px}.done{text-decoration:line-through;color:var(--mute)}
+.hero{text-align:center;padding:64px 0 0}.hero .badge{width:64px;height:64px;border-radius:20px;background:#fff;padding:8px;box-shadow:0 12px 30px rgba(15,35,71,.3)}
+.hero h1{font-size:46px}.hero form{max-width:420px;margin:24px auto 0;text-align:left}
+iframe{box-shadow:var(--sh)}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:9999px;display:none;z-index:9}
+@media(max-width:760px){.gauge{grid-template-columns:1fr}h1{font-size:28px}.hero h1{font-size:34px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+body::before{content:"";position:fixed;left:0;right:0;bottom:0;height:58vh;z-index:-1;pointer-events:none;background:repeating-linear-gradient(90deg,rgba(255,255,255,.22) 0 44px,rgba(255,255,255,0) 44px 88px),linear-gradient(180deg,rgba(255,255,255,0) 0,#dbe8ff 38%,#86adff 72%,#2f6bff 100%)}
+main>h1,.hero h1{text-transform:uppercase;font-weight:800;font-size:clamp(30px,5vw,52px);line-height:1.02;letter-spacing:-.025em;text-align:center;color:var(--ink);margin:14px 0 8px}
+h1 span{color:var(--g)}
+main>h1+.sub,.hero .sub{text-align:center;max-width:620px;margin:0 auto 24px}
+.pillb{display:flex;align-items:center;gap:8px;width:max-content;margin:22px auto 0;padding:7px 18px;border-radius:9999px;background:#fff;box-shadow:0 6px 18px rgba(15,35,71,.12);font-size:14px;font-weight:500}
+.pillb svg{width:16px;height:16px}
+.btn:not(.alt)::before{content:"\2192";display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#fff;color:var(--g);margin-right:12px;font-weight:700}
+.btn.alt::before{display:none}.btn.alt{padding:8px 18px}
+.chips{justify-content:center}
+.kpi{position:relative}
+.kpi::after{content:"";position:absolute;top:12px;right:12px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.8) center/18px no-repeat;border:1px solid #fff;box-shadow:0 8px 18px rgba(27,107,255,.22);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231b6bff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 17l6-6 4 4 8-8'/%3E%3Cpath d='M15 7h6v6'/%3E%3C/svg%3E")}
+.kpis .kpi:nth-child(1)::after{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231b6bff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z'/%3E%3C/svg%3E")}
+.kpis .kpi:nth-child(2)::after{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231b6bff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z'/%3E%3C/svg%3E")}
+.kpis .kpi:nth-child(3)::after{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231b6bff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='7' width='18' height='13' rx='2'/%3E%3Cpath d='M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2'/%3E%3C/svg%3E")}
+.kpi b{padding-right:44px}
+.hero .badge{border:1px solid #fff}
+</style>
+</head>
+<body>
+<header id="hdr"></header>
+<div id="sub"></div>
+<main id="main"></main>
+<div id="toast" role="status"></div>
+<script>
+/* ===== CONFIG: paste your links here ===== */
+const CONFIG = {
+  API_URL: 'https://script.google.com/macros/s/AKfycbyOU6rBDQ2DFezE6wpJsIl4dv7GksdDoycp3C6HcmRttttP8Q3FbDZdVtGU-Ed6ceqt/exec',    // THE one Web app URL from Deploy > Web app (ends in /exec). Leave blank for demo mode.
+  SHEET_URL: 'https://docs.google.com/spreadsheets/d/1dTbMwL3jmyIqZopoS22KohqB1aKnthByBJaL5cyCtbw/edit?gid=1678291753#gid=1678291753',  // link to your "Cogwell OS" Google Sheet
+  MODULES: [      // every dynamic module lives in the same Apps Script deployment (API_URL); nothing else to paste
+    { name: 'Client platform', key: 'platform', note: 'AI website chat, lead routing, client dashboards' },
+    { name: 'Team scoreboard', key: 'scoreboard', note: 'Daily tasks per person' },
+    { name: 'Post Studio', key: 'content', note: 'Content posts from templates' },
+    { name: 'Post Pack Builder', key: 'packbuilder', note: 'Core posts into LinkedIn, Instagram, Facebook packs' },
+    { name: 'Sales System site', key: 'knowledge', note: 'Playbooks, scripts and trackers' },
+    { name: 'WhatsApp queue', key: 'linkqueue', note: 'Sourced leads, one message at a time' },
+    { name: 'Invoices', key: 'invoices', note: 'Build, send and track invoices' },
+    { name: 'Product Delivery Hub', key: 'hub', note: 'Delivery documents' }
+  ],
+  EMBEDS: {         // static content shipped in this folder
+    knowledge: './knowledge/index.html',
+    hub: './hub/index.html'
+  },
+  DYNAMIC: ['platform', 'scoreboard', 'content', 'linkqueue', 'invoices', 'packbuilder'], // served by API_URL?m=<key>
+  TIERS: { Basic: { setup: 1500, monthly: 499 }, Standard: { setup: 3500, monthly: 999 }, Professional: { setup: 7500, monthly: 1999 } },
+  DIAGNOSTIC_URL: '', // link to your free diagnostic; partners' codes are added to it
+  BASE_RATE: 2.4, // meetings per 100 dials in the plan's base case
+  STALLED_DAYS: 5,
+  CHANNELS: ['Cold call', 'Instagram DM', 'Cold outreach', 'Content', 'Affiliate', 'Warm network'],
+  TRADES: ['HVAC', 'Plumbing', 'Electrical', 'Roofing', 'Solar', 'Other'],
+  OUTCOMES: ['No answer', 'Voicemail', 'Not interested', 'Call back', 'Conversation', 'DM opened', 'DM qualified', 'Offer sent', 'Meeting booked'],
+  STAGES: ['Diagnostic booked', 'Diagnostic done', 'Proposal', 'Won', 'Lost'],
+  ONBOARDING: [
+    'Send the client agreement (scope, cancellation, how their customers’ data is handled)',
+    'Invoice the setup fee and confirm payment',
+    'Connect their phone line and lead capture',
+    'Set up AI chat and lead routing',
+    'Test with a real lead from start to finish',
+    'Book the day-7 check-in',
+    'Schedule the monthly money-recovered report'
+  ]
+};
+/* ===== data layer ===== */
+const DEMO = !CONFIG.API_URL, LS = 'cogwell-os-demo';
+let S = { Leads: [], Calls: [], Deals: [], Tasks: [], Affiliates: [], Payments: [], Quotes: [] }, view = 'command';
+const SPARK = '<svg viewBox="0 0 24 24" fill="none" stroke="#1b6bff" stroke-width="2" stroke-linecap="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M18 6l-2.5 2.5M8.5 15.5L6 18"/><\/svg>';
+const LOGO = 'data:image/png;base64,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';
+let INV = null;
+let ME = { role: 'owner' }, PS = null, IB = null, IBT = null, LOGIN = false, SENT = false, EM = '';
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const today = () => new Date().toISOString().slice(0, 10);
+const plus = n => { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+const days = d => d ? Math.floor((Date.now() - new Date(d)) / 864e5) : 0;
+const uid = () => 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+const R = n => 'R' + Number(n || 0).toLocaleString('en-ZA');
+const opts = (a, sel) => a.map(x => `<option${x === sel ? ' selected' : ''}>${esc(x)}</option>`).join('');
+function toast(m) { const t = $('#toast'); t.textContent = m; t.style.display = 'block'; clearTimeout(t._t); t._t = setTimeout(() => t.style.display = 'none', 3200); }
+async function api(action, p) {
+  const r = await fetch(CONFIG.API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(Object.assign({ action, token: sessionStorage.getItem('tok') }, p)) }).then(x => x.json());
+  if (!r.ok) throw new Error(r.error);
+  if (r.role) ME.role = r.role;
+  return r.data;
+}
+async function load() {
+  try {
+    if (DEMO) S = Object.assign(S, JSON.parse(localStorage.getItem(LS) || '{}'));
+    else { S = Object.assign(S, await api('state')); LOGIN = false; }
+  } catch (e) { if (e.message === 'Not signed in') LOGIN = true; else toast('Could not load data: ' + e.message + '. Check API_URL in CONFIG.'); }
+  if (!DEMO && !LOGIN && (ME.role === 'owner' || ME.role === 'team')) api('platform').then(d => { PS = d; if (view === 'command') render(); }).catch(() => {});
+}
+const save = () => DEMO && localStorage.setItem(LS, JSON.stringify(S));
+async function add(tab, row) {
+  row = Object.assign({ id: uid(), created: new Date().toISOString() }, row);
+  S[tab].push(row); save();
+  if (!DEMO) await api('add', { tab, row });
+  return row;
+}
+async function upd(tab, id, f) {
+  Object.assign(S[tab].find(x => x.id === id), f); save();
+  if (!DEMO) await api('update', { tab, id, fields: f });
+}
+const guard = fn => async (...a) => { try { await fn(...a); render(); } catch (e) { if (e.message === 'Not signed in') { LOGIN = true; render(); } else toast('Not saved: ' + e.message); } };
+/* ===== metrics ===== */
+const answered = o => o !== 'No answer' && o !== 'Voicemail';
+function stats(calls) {
+  const d = calls.length, m = calls.filter(c => c.outcome === 'Meeting booked').length;
+  return { d, c: calls.filter(c => answered(c.outcome)).length, m, rate: d ? m / d * 100 : 0 };
+}
+const won = () => S.Deals.filter(d => d.stage === 'Won');
+const mrr = () => won().reduce((s, d) => s + Number(d.monthly_fee || 0), 0);
+/* ===== views ===== */
+const VIEWS = { command: 'Command Center', calls: 'Outreach', pipeline: 'Pipeline', quotes: 'Quotes', linkqueue: 'WhatsApp queue', invoices: 'Invoices', invites: 'Invites', affiliates: 'Affiliates', content: 'Post Studio', packbuilder: 'Post Pack Builder', delivery: 'Delivery', platform: 'Client platform', inbox: 'Inbox', analytics: 'Analytics', scoreboard: 'Scoreboard', knowledge: 'Knowledge', hub: 'Product Hub', links: 'Modules', portal: 'Your account', partner: 'Partner hub' };
+const GROUPS = { Overview: ['command'], Sell: ['calls', 'pipeline', 'quotes', 'affiliates', 'linkqueue', 'content', 'packbuilder'], Deliver: ['delivery', 'platform', 'invoices'], Operate: ['inbox', 'analytics', 'scoreboard'], Learn: ['knowledge', 'hub'], Admin: ['invites', 'links'] };
+const roleGroups = () => ME.role === 'client' ? { Account: ['portal'] } : ME.role === 'affiliate' ? { Partner: ['partner'] } : ME.role === 'team' ? { Overview: GROUPS.Overview, Sell: GROUPS.Sell, Deliver: GROUPS.Deliver, Operate: GROUPS.Operate, Learn: GROUPS.Learn } : GROUPS;
+const signOut = () => { sessionStorage.removeItem('tok'); location.reload(); };
+function go(v) { view = v; render(); }
+function render() {
+  const hdr = $('#hdr'), sub = $('#sub');
+  if (LOGIN) { hdr.style.display = 'none'; sub.innerHTML = ''; $('#main').innerHTML = V.login(); return; }
+  hdr.style.display = '';
+  const g = roleGroups();
+  if (!Object.values(g).some(a => a.includes(view))) view = Object.values(g)[0][0];
+  const cur = Object.keys(g).find(k => g[k].includes(view));
+  hdr.innerHTML = `<div class="logo"><img src="${LOGO}" alt=""><span>Cogwell</span></div><div class="tabs">${Object.keys(g).map(k => `<button class="${k === cur ? 'on' : ''}" onclick="go('${g[k][0]}')">${k}</button>`).join('')}</div>${DEMO ? '' : '<button class="btn alt" onclick="signOut()">Sign out</button>'}`;
+  sub.innerHTML = g[cur].length > 1 ? `<div class="chips">${g[cur].map(v => `<button class="${v === view ? 'on' : ''}" onclick="go('${v}')">${VIEWS[v]}</button>`).join('')}</div>` : '';
+  $('#main').innerHTML = (DEMO ? '<div class="banner">Demo mode: your data stays in this browser. Paste your Apps Script URL into CONFIG in index.html to switch to your Google Sheet and turn on invite-only login.</div>' : '') + `<div class="pillb">${SPARK}${cur}</div>` + V[view]();
+  const h1 = $('#main>h1'); if (h1) { const w = h1.textContent.split(' '); if (w.length > 1) { const l = w.pop(); h1.innerHTML = esc(w.join(' ')) + ' <span>' + esc(l) + '</span>'; } }
+}
+const V = {};
+V.command = () => {
+  const wk = S.Calls.filter(c => days(c.created) < 7), s = stats(wk), t = today(), todo = [];
+  S.Leads.filter(l => l.status === 'Open' && l.next_due && l.next_due <= t).forEach(l => todo.push(['Call back', l.business, l.next_action || 'Follow up', l.next_due, l.next_due < t]));
+  S.Deals.filter(d => !['Won', 'Lost'].includes(d.stage) && days(d.stage_changed) >= CONFIG.STALLED_DAYS).forEach(d => todo.push(['Stalled deal', d.business, d.stage + ' for ' + days(d.stage_changed) + ' days', d.stage_changed, true]));
+  S.Tasks.filter(x => x.status !== 'Done' && x.due && x.due <= t).forEach(x => todo.push(['Onboarding', x.business, x.title, x.due, x.due < t]));
+  const open = S.Deals.filter(d => !['Won', 'Lost'].includes(d.stage));
+  const pct = Math.min(s.rate / (CONFIG.BASE_RATE * 2) * 100, 100);
+  const rows = CONFIG.CHANNELS.map(ch => {
+    const st = stats(S.Calls.filter(c => c.channel === ch)), w = won().filter(d => d.channel === ch);
+    return `<tr><td>${ch}</td><td>${st.d}</td><td>${st.c}</td><td>${st.m}</td><td>${w.length}</td><td>${R(w.reduce((a, d) => a + Number(d.monthly_fee || 0), 0))}</td></tr>`;
+  }).join('');
+  return `<h1>Command Center</h1><p class="sub">What to do first today, and whether the calling is working.</p>
+  <div class="gauge"><div><div class="n">${s.rate.toFixed(1)}</div><small>meetings per 100 dials, last 7 days (${s.m} from ${s.d})</small></div>
+  <div><div class="bar"><i style="width:${pct}%"></i><u style="left:50%"></u><span style="left:50%">base case ${CONFIG.BASE_RATE}</span></div></div></div>
+  <div class="kpis"><div class="kpi"><b>${s.d}</b><span>dials this week</span></div><div class="kpi"><b>${s.c}</b><span>conversations</span></div>
+  <div class="kpi"><b>${open.length}</b><span>open deals</span></div><div class="kpi"><b>${R(mrr())}</b><span>monthly recurring revenue</span></div>${PS ? `<div class="kpi"><b>${PS.leads7}</b><span>platform leads, 7 days</span></div><div class="kpi"><b>${PS.errors7}</b><span>automation errors, 7 days</span></div>` : ''}</div>
+  <h2>Needs action now</h2>${todo.length ? todo.map(x => `<div class="todo ${x[4] ? 'late' : ''}"><b>${x[0]}</b><div>${esc(x[1])}: ${esc(x[2])}</div><span>${esc(String(x[3]).slice(0, 10))}</span></div>`).join('') : '<div class="empty">Nothing is due. Log calls to fill the pipeline.</div>'}
+  <h2>By channel, all time</h2><div class="wrap"><table><tr><th>Channel</th><th>Dials</th><th>Conversations</th><th>Meetings</th><th>Won</th><th>MRR won</th></tr>${rows}</table></div>`;
+};
+V.calls = () => {
+  const recent = S.Calls.slice(-15).reverse();
+  return `<h1>Calls</h1><p class="sub">Log every dial in under 20 seconds. A meeting booked creates the deal for you.</p>
+  <form class="grid" onsubmit="event.preventDefault();logCall(this)">
+  <label>Business<input name="business" required autofocus></label><label>Phone<input name="phone" inputmode="tel"></label>
+  <label>Trade<select name="trade">${opts(CONFIG.TRADES)}</select></label><label>City<input name="city"></label>
+  <label>Channel<select name="channel">${opts(CONFIG.CHANNELS)}</select></label><label>Outcome<select name="outcome">${opts(CONFIG.OUTCOMES)}</select></label>
+  <label>Next step<input name="next"></label><label>Next step date<input type="date" name="due"></label>
+  <label>Referral code (if any)<input name="ref"></label><button class="btn" type="submit">Log call</button></form>
+  <h2>Recent calls</h2>${recent.length ? `<div class="wrap"><table><tr><th>When</th><th>Business</th><th>Outcome</th><th>Channel</th><th>Next step</th></tr>${recent.map(c => `<tr><td>${esc(String(c.created).slice(0, 10))}</td><td>${esc(c.business)}</td><td>${esc(c.outcome)}</td><td>${esc(c.channel)}</td><td>${esc(c.next_step)}</td></tr>`).join('')}</table></div>` : '<div class="empty">No calls yet. Log the first one above.</div>'}`;
+};
+const logCall = guard(async f => {
+  const v = n => f[n].value.trim(), b = v('business');
+  let lead = S.Leads.find(l => l.business.toLowerCase() === b.toLowerCase());
+  if (!lead) lead = await add('Leads', { business: b, phone: v('phone'), trade: v('trade'), city: v('city'), channel: v('channel'), status: 'Open', next_action: v('next'), next_due: v('due') });
+  else await upd('Leads', lead.id, { next_action: v('next'), next_due: v('due') });
+  await add('Calls', { lead_id: lead.id, business: b, outcome: v('outcome'), next_step: v('next'), channel: v('channel') });
+  if (v('outcome') === 'Meeting booked' && !S.Deals.some(d => d.lead_id === lead.id)) {
+    const t = CONFIG.TIERS.Standard;
+    await add('Deals', { lead_id: lead.id, business: b, channel: v('channel'), tier: 'Standard', setup_fee: t.setup, monthly_fee: t.monthly, stage: CONFIG.STAGES[0], stage_changed: today(), affiliate_code: v('ref') });
+  }
+  toast('Logged ' + b);
+  f.reset();
+});
+V.pipeline = () => `<h1>Pipeline</h1><p class="sub">Deals by stage. A deal untouched for ${CONFIG.STALLED_DAYS} days shows up in Needs action now.</p><div class="board">${CONFIG.STAGES.map(st => {
+  const ds = S.Deals.filter(d => d.stage === st);
+  return `<div class="col"><h3>${st} (${ds.length})</h3>${ds.map(d => `<div class="card"><b>${esc(d.business)}</b>
+  <small>${esc(d.channel)}${d.affiliate_code ? ', code ' + esc(d.affiliate_code) : ''} · ${days(d.stage_changed)}d in stage</small>
+  <label>Tier<select onchange="setTier('${d.id}',this.value)">${opts(Object.keys(CONFIG.TIERS), d.tier)}</select></label>
+  <small>${R(d.setup_fee)} setup + ${R(d.monthly_fee)}/month</small>${d.stage === 'Won' ? `<button class="btn alt" onclick="pay('${d.id}','setup')">Record setup paid</button><button class="btn alt" onclick="pay('${d.id}','monthly')">Record monthly paid</button>` : ''}
+  <label>Stage<select onchange="setStage('${d.id}',this.value)">${opts(CONFIG.STAGES, d.stage)}</select></label></div>`).join('') || '<small>Empty</small>'}</div>`;
+}).join('')}</div>`;
+const setTier = guard(async (id, t) => upd('Deals', id, { tier: t, setup_fee: CONFIG.TIERS[t].setup, monthly_fee: CONFIG.TIERS[t].monthly }));
+const setStage = guard(async (id, s) => {
+  const d = S.Deals.find(x => x.id === id);
+  await upd('Deals', id, { stage: s, stage_changed: today() });
+  if (s === 'Won' || s === 'Lost') await upd('Leads', d.lead_id, { status: s });
+  if (s === 'Won' && !S.Tasks.some(t => t.deal_id === id)) {
+    for (const [i, title] of CONFIG.ONBOARDING.entries()) await add('Tasks', { deal_id: id, business: d.business, title, owner: 'Me', due: plus(i < 2 ? 2 : 7), status: 'Open' });
+    toast('Won. Onboarding checklist created for ' + d.business);
+  }
+});
+V.delivery = () => {
+  const by = {};
+  S.Tasks.forEach(t => (by[t.business] = by[t.business] || []).push(t));
+  const names = Object.keys(by);
+  return `<h1>Delivery</h1><p class="sub">Onboarding checklists for every client you win. Target about 4 hours per client.</p>` + (names.length ? names.map(n => {
+    const ts = by[n], dn = ts.filter(t => t.status === 'Done').length;
+    return `<h2>${esc(n)} <small style="color:var(--mute);font-weight:400">${dn} of ${ts.length} done</small></h2>${ts.map(t => `<label class="chk" style="flex-direction:row;color:inherit;font-size:15px"><input type="checkbox" ${t.status === 'Done' ? 'checked' : ''} onchange="tick('${t.id}',this.checked)"><span class="${t.status === 'Done' ? 'done' : ''}">${esc(t.title)}</span><small style="margin-left:auto;color:var(--mute)">${esc(t.due)}</small></label>`).join('')}`;
+  }).join('') : '<div class="empty">No clients yet. Move a deal to Won in the Pipeline and its onboarding checklist appears here.</div>');
+};
+const tick = guard(async (id, on) => upd('Tasks', id, { status: on ? 'Done' : 'Open' }));
+const PAYOUT = { setup: .20, bonusSetup: .25, bonusAfter: 3, monthly: .10, months: 12 };
+const PARTNERS = ['Bookkeeper or accountant', 'Phone or VoIP reseller', 'Trade supplier', 'Insurance or finance broker', 'Trade association', 'Happy customer', 'Other'];
+const pay = guard(async (id, type) => {
+  const d = S.Deals.find(x => x.id === id);
+  if (type === 'setup' && S.Payments.some(p => p.deal_id === id && p.type === 'setup')) return toast('Setup payment already recorded');
+  await add('Payments', { deal_id: id, business: d.business, type, amount: Number(type === 'setup' ? d.setup_fee : d.monthly_fee), cleared: 'yes' });
+  toast(R(type === 'setup' ? d.setup_fee : d.monthly_fee) + ' recorded for ' + d.business);
+});
+function affStats(a) {
+  const ds = S.Deals.filter(d => d.affiliate_code === a.code), w = ds.filter(d => d.stage === 'Won');
+  const rate = w.length >= PAYOUT.bonusAfter ? PAYOUT.bonusSetup : PAYOUT.setup;
+  let cash = 0, com = 0;
+  w.forEach(d => { let m = 0; S.Payments.filter(p => p.deal_id === d.id).forEach(p => { const x = Number(p.amount); cash += x; if (p.type === 'setup') com += x * rate; else if (++m <= PAYOUT.months) com += x * PAYOUT.monthly; }); });
+  return { intros: ds.length, won: w.length, cash, com };
+}
+V.affiliates = () => {
+  const rows = S.Affiliates.map(a => Object.assign({ a }, affStats(a))).sort((x, y) => y.cash - x.cash);
+  return `<h1>Affiliates</h1><p class="sub">Partners who introduce trades businesses. Ranked by cash collected, never clicks. Commission is ${PAYOUT.setup * 100}% of setup (${PAYOUT.bonusSetup * 100}% after ${PAYOUT.bonusAfter} wins) plus ${PAYOUT.monthly * 100}% of monthly for ${PAYOUT.months} months, on cleared cash only.</p>
+  <form class="grid" onsubmit="event.preventDefault();addAff(this)"><label>Name<input name="name" required></label><label>Business<input name="business"></label>
+  <label>Partner type<select name="type">${opts(PARTNERS)}</select></label><button class="btn" type="submit">Add affiliate</button></form>
+  <h2>Leaderboard</h2>${rows.length ? `<div class="wrap"><table><tr><th>Rank</th><th>Affiliate</th><th>Code</th><th>Type</th><th>Introductions</th><th>Won</th><th>Cash collected</th><th>Commission owed</th></tr>${rows.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r.a.name)}</td><td><b>${esc(r.a.code)}</b></td><td>${esc(r.a.type)}</td><td>${r.intros}</td><td>${r.won}</td><td>${R(r.cash)}</td><td>${R(r.com)}</td></tr>`).join('')}</table></div>` : '<div class="empty">No affiliates yet. Add your first partner above, then log their code in the Referral code field when you record a call.</div>'}
+  <p class="sub" style="margin-top:12px">Pay on the 15th for cash that cleared last month. Record payments from the Pipeline once a deal is Won.</p>`;
+};
+const addAff = guard(async f => {
+  const n = f.name.value.trim(), code = n.replace(/[^A-Za-z]/g, '').slice(0, 4).toUpperCase() + String(Math.floor(10 + Math.random() * 90));
+  await add('Affiliates', { name: n, business: f.business.value.trim(), type: f.type.value, code, status: 'Active' });
+  toast('Added ' + n + ' with code ' + code);
+});
+const modUrl = k => CONFIG.EMBEDS[k] || (CONFIG.DYNAMIC.includes(k) && CONFIG.API_URL ? CONFIG.API_URL + '?m=' + k : '');
+V.links = () => `<h1>Modules</h1><p class="sub">Everything runs from one platform and one sign-in. Static content ships in this folder; the rest is served by your single Apps Script deployment.</p>
+  <div class="board">${CONFIG.MODULES.map(m => `<div class="card"><b>${esc(m.name)}</b><small>${esc(m.note)}</small>${modUrl(m.key) ? `<a class="btn alt" style="text-decoration:none;text-align:center" href="${esc(modUrl(m.key))}" target="_blank" rel="noopener">Open</a>` : '<small>Set API_URL in CONFIG to turn this on.</small>'}</div>`).join('')}
+  <div class="card"><b>Cogwell OS sheet</b><small>The database behind this site</small>${CONFIG.SHEET_URL ? `<a class="btn alt" style="text-decoration:none;text-align:center" href="${esc(CONFIG.SHEET_URL)}" target="_blank" rel="noopener">Open sheet</a>` : '<small>Add SHEET_URL in CONFIG.</small>'}</div></div>`;
+V.login = () => `<div class="hero"><img class="badge" src="${LOGO}" alt="Cogwell"><div class="pillb">${SPARK}Invite only</div><h1>Welcome to <span>Cogwell</span></h1><p class="sub">Access is by invitation only. Enter your email and we will send you a sign-in code.</p><form class="grid" onsubmit="event.preventDefault();doLogin(this)"><label>Email<input name="email" type="email" required value="${esc(EM)}"></label>${SENT ? '<label>Code<input name="code" inputmode="numeric" autocomplete="one-time-code" autofocus></label>' : ''}<button class="btn" type="submit">${SENT ? 'Sign in' : 'Send my code'}</button></form></div>`;
+const doLogin = async f => {
+  try {
+    EM = f.email.value.trim();
+    if (!SENT) { await api('login', { email: EM }); SENT = true; toast('Code sent. Check your email.'); }
+    else { const d = await api('verify', { email: EM, code: f.code.value }); sessionStorage.setItem('tok', d.token); ME.role = d.role; await load(); }
+    render();
+  } catch (e) { toast(e.message); }
+};
+V.quotes = () => `<h1>Quotes</h1><p class="sub">Create a quote from a deal, then save it as a PDF.</p>
+<form class="grid" onsubmit="event.preventDefault();addQuote(this)"><label>Deal<select name="deal">${S.Deals.map(d => `<option value="${d.id}">${esc(d.business)}</option>`).join('')}</select></label><label>Plan<select name="tier">${opts(Object.keys(CONFIG.TIERS), 'Standard')}</select></label><button class="btn" type="submit">Create quote</button></form>
+<h2>All quotes</h2>${S.Quotes.length ? `<div class="wrap"><table><tr><th>Date</th><th>Business</th><th>Plan</th><th>Setup</th><th>Monthly</th><th>Status</th><th></th></tr>${S.Quotes.slice().reverse().map(q => `<tr><td>${esc(String(q.created).slice(0, 10))}</td><td>${esc(q.business)}</td><td>${esc(q.tier)}</td><td>${R(q.setup_fee)}</td><td>${R(q.monthly_fee)}</td><td><select onchange="setQ('${q.id}',this.value)">${opts(['Draft', 'Sent', 'Signed', 'Expired'], q.status)}</select></td><td><button class="btn alt" onclick="printQuote('${q.id}')">Save as PDF</button></td></tr>`).join('')}</table></div>` : '<div class="empty">No quotes yet. Create one from a deal above.</div>'}`;
+const addQuote = guard(async f => { const d = S.Deals.find(x => x.id === f.deal.value); if (!d) throw new Error('Create a deal first'); const t = CONFIG.TIERS[f.tier.value]; await add('Quotes', { deal_id: d.id, business: d.business, tier: f.tier.value, setup_fee: t.setup, monthly_fee: t.monthly, status: 'Draft' }); });
+const setQ = guard(async (id, s) => upd('Quotes', id, { status: s }));
+function printQuote(id) {
+  const q = S.Quotes.find(x => x.id === id), w = window.open('', '_blank');
+  w.document.write(`<title>Quote for ${esc(q.business)}</title><body style="font:16px/1.6 Outfit,system-ui,sans-serif;color:#0f2347;max-width:640px;margin:48px auto"><h1 style="margin:0">Cogwell</h1><p>Quote for ${esc(q.business)}, ${esc(String(q.created).slice(0, 10))}. Ref ${esc(q.id.slice(-6))}</p><h2>${esc(q.tier)} plan</h2><table style="width:100%;border-collapse:collapse"><tr><td>Setup, once</td><td style="text-align:right">${R(q.setup_fee)}</td></tr><tr><td>Monthly</td><td style="text-align:right">${R(q.monthly_fee)}</td></tr><tr style="border-top:2px solid #0f2347"><td><b>First-month total</b></td><td style="text-align:right"><b>${R(Number(q.setup_fee) + Number(q.monthly_fee))}</b></td></tr></table><p>Includes onboarding and a monthly report on missed calls recovered. Cancellation and data handling follow the client agreement.</p><\/body>`);
+  w.document.close(); w.print();
+}
+V.analytics = () => {
+  const s = stats(S.Calls), dd = S.Deals.filter(d => ['Diagnostic done', 'Proposal', 'Won'].includes(d.stage)).length, w = won().length, tot = S.Deals.length;
+  const wks = S.Calls.length ? Math.max(1, days(S.Calls[0].created) / 7) : 1, close = tot ? w / tot : 0, avg = w ? mrr() / w : CONFIG.TIERS.Standard.monthly;
+  const f = [['Dials', s.d], ['Conversations', s.c], ['Meetings booked', s.m], ['Diagnostics done', dd], ['Won', w]], mx = Math.max(1, s.d);
+  return `<h1>Analytics</h1><p class="sub">Where prospects drop off, and what the current pace is worth.</p>${f.map((x, i) => `<div style="margin:10px 0"><div style="display:flex;justify-content:space-between"><span>${x[0]}</span><b>${x[1]}${i ? ', ' + (f[i - 1][1] ? Math.round(x[1] / f[i - 1][1] * 100) : 0) + '% of previous' : ''}</b></div><div class="bar" style="background:var(--sage)"><i style="width:${x[1] / mx * 100}%;background:var(--ink)"></i></div></div>`).join('')}
+  <div class="kpis"><div class="kpi"><b>${(close * 100).toFixed(0)}%</b><span>meetings that become clients</span></div><div class="kpi"><b>${R(avg)}</b><span>average MRR per client</span></div><div class="kpi"><b>${R(Math.round(s.m / wks * 4.3 * close * avg))}</b><span>new MRR in 30 days at this pace</span></div></div>`;
+};
+V.inbox = () => {
+  if (DEMO) return '<h1>Inbox</h1><div class="empty">Connect your Apps Script (API_URL) to read and reply to Gmail here.</div>';
+  if (!IB) { api('inbox').then(d => { IB = d; render(); }).catch(e => toast(e.message)); return '<h1>Inbox</h1><p class="sub">Loading your mail.</p>'; }
+  if (IBT) return `<h1>Inbox</h1><button class="btn alt" onclick="IBT=null;render()">Back to inbox</button>${IBT.m.map(m => `<div class="card"><b>${esc(m.from)}</b><small>${esc(m.date.slice(0, 10))}</small><div style="white-space:pre-wrap">${esc(m.body)}</div></div>`).join('')}<form class="grid" onsubmit="event.preventDefault();reply(this)"><label style="grid-column:1/-1">Reply<textarea name="b" rows="4" required></textarea></label><button class="btn" type="submit">Send reply</button></form>`;
+  return '<h1>Inbox</h1>' + (IB.map(t => `<div class="todo" style="cursor:pointer" onclick="openT('${t.id}')"><b>${esc(t.from.replace(/<.*>/, ''))}</b><div>${esc(t.subject)}</div><span>${esc(t.date.slice(0, 10))}</span></div>`).join('') || '<div class="empty">Your inbox is empty.</div>');
+};
+const openT = guard(async id => { IBT = { id, m: await api('thread', { id }) }; });
+const reply = guard(async f => { await api('send', { id: IBT.id, body: f.b.value }); toast('Reply sent'); IBT = null; IB = null; });
+V.portal = () => {
+  const d = S.Deals[0], ts = S.Tasks, dn = ts.filter(t => t.status === 'Done').length;
+  if (!d) return '<h1>Your Cogwell account</h1><div class="empty">Your account is being set up.</div>';
+  return `<h1>Your Cogwell account</h1><div class="kpis"><div class="kpi"><b>${esc(d.tier)}</b><span>your plan</span></div><div class="kpi"><b>${dn} of ${ts.length}</b><span>setup steps complete</span></div><div class="kpi"><b>${R(S.Payments.reduce((a, p) => a + Number(p.amount), 0))}</b><span>paid to date</span></div></div><h2>Setup progress</h2>${ts.map(t => `<div class="chk"><span class="${t.status === 'Done' ? 'done' : ''}">${esc(t.title)}</span><small style="margin-left:auto;color:var(--mute)">${t.status === 'Done' ? 'Done' : esc(t.due)}</small></div>`).join('')}${CONFIG.EMBEDS.platform ? `<p><a class="btn" style="text-decoration:none;display:inline-block;margin-top:16px" href="${esc(CONFIG.EMBEDS.platform)}">Open your dashboard</a></p>` : ''}`;
+};
+V.partner = () => {
+  const a = S.Affiliates[0];
+  if (!a) return '<h1>Partner hub</h1><div class="empty">Your partner account is being set up.</div>';
+  const s = affStats(a), rk = (S.board || []).indexOf(a.name) + 1;
+  const msg = `Hi [Name], I came across something useful for businesses like yours. Cogwell has a free check that shows what missed calls and slow replies cost you each month.${CONFIG.DIAGNOSTIC_URL ? ' ' + CONFIG.DIAGNOSTIC_URL + '?ref=' + a.code : ''} If it looks worth a conversation, I can introduce you to them directly. Referred by ${a.code}.`;
+  return `<h1>Partner hub</h1><p class="sub">Your code is <b>${esc(a.code)}</b>. Commission is paid on the 15th for cash that cleared last month.</p><div class="kpis"><div class="kpi"><b>${s.intros}</b><span>introductions</span></div><div class="kpi"><b>${s.won}</b><span>customers won</span></div><div class="kpi"><b>${R(s.cash)}</b><span>cash collected</span></div><div class="kpi"><b>${R(s.com)}</b><span>commission earned</span></div><div class="kpi"><b>#${rk || '-'}</b><span>leaderboard rank</span></div></div><h2>Message to forward</h2><div class="card" style="white-space:pre-wrap">${esc(msg)}</div><h2>Leaderboard</h2>${(S.board || []).slice(0, 10).map((n, i) => `<div class="chk"><b>${i + 1}</b><span>${esc(n)}</span></div>`).join('')}`;
+};
+V.invites = () => {
+  if (DEMO) return '<h1>Invites</h1><div class="empty">Connect your Apps Script (API_URL) to turn on invite-only login.</div>';
+  if (!INV) { api('users').then(d => { INV = d; render(); }).catch(e => toast(e.message)); return '<h1>Invites</h1><p class="sub">Loading.</p>'; }
+  const link = location.href.split('?')[0].split('#')[0];
+  return `<h1>Invites</h1><p class="sub">Only people you invite can sign in. Send them the link below; they enter their email and receive a code.</p><div class="card"><b>Sign-in link</b><input readonly value="${esc(link)}" onclick="this.select()"></div>
+  <h2>Invite someone</h2><form class="grid" onsubmit="event.preventDefault();invite(this)"><label>Email<input name="email" type="email" required></label><label>Role<select name="role">${opts(['client', 'team', 'affiliate'])}</select></label><label>Business (clients)<input name="business"></label><label>Code (affiliates, optional)<input name="code"></label><button class="btn" type="submit">Send invite</button></form>
+  <h2>People with access</h2><div class="wrap"><table><tr><th>Email</th><th>Role</th><th>Business or code</th><th>Status</th><th></th></tr>${INV.map(u => `<tr><td>${esc(u.email)}</td><td>${esc(u.role)}</td><td>${esc(u.business || u.code)}</td><td>${u.status === 'off' ? 'Revoked' : 'Active'}</td><td>${u.role === 'owner' ? '' : `<button class="btn alt" onclick="revoke('${esc(u.email)}','${u.status === 'off' ? 'on' : 'off'}')">${u.status === 'off' ? 'Restore' : 'Revoke'}</button>`}</td></tr>`).join('')}</table></div>`;
+};
+const invite = guard(async f => {
+  const em = f.email.value.trim(), role = f.role.value;
+  const code = role === 'affiliate' ? (f.code.value.trim().toUpperCase() || em.split('@')[0].replace(/[^A-Za-z]/g, '').slice(0, 4).toUpperCase() + Math.floor(10 + Math.random() * 90)) : '';
+  await api('invite', { email: em, role, business: f.business.value.trim(), code, site: location.href.split('?')[0].split('#')[0] });
+  if (role === 'affiliate' && !S.Affiliates.some(a => a.code === code)) await add('Affiliates', { name: em.split('@')[0], business: '', type: 'Other', code, status: 'Active' });
+  INV = null; toast('Invite sent to ' + em); f.reset();
+});
+const revoke = guard(async (e, s) => { await api('setuser', { email: e, status: s }); INV = null; });
+const frame = (t, u, open) => `<h1>${t}</h1><iframe src="${esc(u)}" title="${esc(t)}" style="width:100%;height:80vh;border:1px solid var(--line);border-radius:12px;background:#fff"></iframe><p class="sub"><a href="${esc(open || u)}" target="_blank" rel="noopener">Open in a new tab</a></p>`;
+async function openModule(k, t) {
+  const box = $('#emb'); if (!box) return;
+  try {
+    let u = CONFIG.API_URL + '?m=' + k;
+    if (k !== 'platform') u += '&k=' + (await api('ticket')).ticket; // one-use pass: the session itself never goes in a URL
+    if ($('#emb')) $('#emb').outerHTML = frame(t, u, CONFIG.API_URL + '?m=' + k).replace(/^<h1>.*?<\/h1>/, '');
+  } catch (e) { if (e.message === 'Not signed in') { LOGIN = true; render(); } else if ($('#emb')) $('#emb').textContent = 'Could not open this module: ' + e.message; }
+}
+const embed = (t, k) => {
+  if (CONFIG.EMBEDS[k]) return frame(t, CONFIG.EMBEDS[k]);
+  if (!CONFIG.DYNAMIC.includes(k) || !CONFIG.API_URL) return `<h1>${t}</h1><div class="empty">Set API_URL in CONFIG to turn this module on.</div>`;
+  setTimeout(() => openModule(k, t), 0);
+  return `<h1>${t}</h1><div id="emb" class="empty">Opening…</div>`;
+};
+Object.entries({ platform: 'Client platform', knowledge: 'Knowledge', scoreboard: 'Scoreboard', content: 'Post Studio', packbuilder: 'Post Pack Builder', hub: 'Product Hub', linkqueue: 'WhatsApp queue', invoices: 'Invoices' }).forEach(([k, t]) => { VIEWS[k] = t; V[k] = () => embed(t, k); });
+load().then(render);
+</script>
+</body>
+</html>

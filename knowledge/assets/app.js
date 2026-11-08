@@ -1,0 +1,4 @@
+
+document.getElementById('m').onclick=function(){document.getElementById('nav').classList.toggle('open')};
+var t=document.getElementById('toc');if(t){document.querySelectorAll('article h2').forEach(function(h,i){h.id=h.id||'s'+i;var a=document.createElement('a');a.href='#'+h.id;a.textContent=h.textContent;t.appendChild(a)})}
+var f=document.getElementById('f');if(f){var k='';function run(){var q=f.value.toLowerCase();document.querySelectorAll('.card').forEach(function(c){c.style.display=(c.textContent.toLowerCase().indexOf(q)>-1&&(!k||c.dataset.k===k))?'':'none'})}f.oninput=run;document.querySelectorAll('.chips button').forEach(function(b){b.onclick=function(){k=b.dataset.k;document.querySelectorAll('.chips button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');run()}})}

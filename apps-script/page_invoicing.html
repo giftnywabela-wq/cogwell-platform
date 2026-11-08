@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!--OS_BOOT-->
+<script>
+/* Cogwell platform bridge: lets every page keep its original google.script.run code. */
+window.OSRUN = function (mod) {
+  function make(ok, no) {
+    return new Proxy({}, {
+      get: function (_, k) {
+        if (k === 'then') return undefined;
+        if (k === 'withSuccessHandler') return function (f) { return make(f, no); };
+        if (k === 'withFailureHandler') return function (f) { return make(ok, f); };
+        if (k === 'withUserObject') return function () { return make(ok, no); };
+        return function () {
+          var args = Array.prototype.slice.call(arguments);
+          google.script.run
+            .withSuccessHandler(function (raw) {
+              var o;
+              try { o = JSON.parse(raw); } catch (e) { if (no) no(e); return; }
+              if (o.err) {
+                if (o.err === 'Not signed in') window.OS_expired && window.OS_expired();
+                if (no) no({ message: o.err, name: 'Error' });
+              } else if (ok) { ok(o.v); }
+            })
+            .withFailureHandler(function (e) { if (no) no(e); })
+            .osApi(window.OS_TOKEN || '', mod, String(k), JSON.stringify(args));
+        };
+      }
+    });
+  }
+  return make(null, null);
+};
+window.OS_expired = function () {
+  if (document.getElementById('os-expired')) return;
+  var d = document.createElement('div'); d.id = 'os-expired';
+  d.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99999;background:#b42318;color:#fff;padding:10px 16px;font:600 14px system-ui,sans-serif;text-align:center';
+  d.textContent = 'Your session expired. Reload this page and sign in again.';
+  document.body.appendChild(d);
+  try { parent.postMessage({ cogwell: 'signedout' }, '*'); } catch (e) {}
+};
+</script>
+
+<base target="_top">
+<meta charset="utf-8">
+<style>
+  :root { --green:#1b6bff; --navy:#1F3A5F; --light:#F5F6FA; --line:#dfe3ea; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:Arial,Helvetica,sans-serif; color:#111; background:var(--light); }
+  header { background:#fff; border-bottom:3px solid var(--green); padding:14px 20px; display:flex; align-items:center; justify-content:space-between; }
+  .brand { font-weight:bold; color:var(--green); letter-spacing:4px; font-size:22px; }
+  .brand small { color:var(--navy); letter-spacing:0; font-size:13px; margin-left:10px; }
+  main { max-width:1100px; margin:0 auto; padding:18px; }
+  .tabs button { background:none; border:0; padding:10px 16px; font-size:14px; font-weight:bold; color:#667; cursor:pointer; border-bottom:3px solid transparent; }
+  .tabs button.on { color:var(--navy); border-bottom-color:var(--green); }
+  .card { background:#fff; border:1px solid var(--line); border-radius:8px; padding:16px; margin-bottom:16px; }
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:16px; }
+  .stat { background:#fff; border:1px solid var(--line); border-radius:8px; padding:12px 14px; }
+  .stat b { display:block; font-size:22px; color:var(--navy); margin-top:4px; }
+  .stat span { font-size:11px; text-transform:uppercase; color:#778; }
+  label { display:block; font-size:12px; font-weight:bold; color:var(--navy); margin:10px 0 4px; }
+  input, select, textarea { width:100%; padding:9px 10px; border:1px solid #cdd3dd; border-radius:6px; font-size:14px; font-family:inherit; }
+  textarea { min-height:70px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media (max-width:640px) { .grid2 { grid-template-columns:1fr; } }
+  button.btn { background:var(--navy); color:#fff; border:0; border-radius:6px; padding:10px 16px; font-size:14px; font-weight:bold; cursor:pointer; }
+  button.btn.green { background:var(--green); color:var(--navy); }
+  button.btn.ghost { background:#fff; color:var(--navy); border:1px solid var(--navy); }
+  button.sm { padding:5px 9px; font-size:12px; border-radius:5px; border:1px solid var(--navy); background:#fff; color:var(--navy); cursor:pointer; margin:2px 2px 2px 0; text-decoration:none; display:inline-block; }
+  button.sm.red { border-color:#b33; color:#b33; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { background:var(--navy); color:#fff; text-align:left; padding:8px; font-size:11px; text-transform:uppercase; }
+  td { padding:8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  .wrap { overflow-x:auto; }
+  .pill { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:bold; background:#e8ecf3; color:var(--navy); }
+  .pill.Paid { background:#dbe8ff; } .pill.Draft { background:#fff3cd; } .pill.Sent { background:#d6e8ff; }
+  .itemrow { display:grid; grid-template-columns:2fr 3fr 110px 36px; gap:8px; margin-bottom:8px; align-items:start; }
+  @media (max-width:640px) { .itemrow { grid-template-columns:1fr 1fr; } }
+  .totals { text-align:right; font-size:14px; margin-top:10px; line-height:1.7; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  #toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--navy); color:#fff; padding:10px 18px; border-radius:6px; font-size:13px; display:none; z-index:9; }
+  .err { color:#b33; font-size:13px; margin-top:8px; }
+  .linkbox { background:#E8F5D0; border:1px solid var(--green); border-radius:8px; padding:12px; word-break:break-all; font-size:13px; }
+  [hidden] { display:none !important; }
+</style>
+<style id="cw-skin">@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
+:root,.dark{color-scheme:light;--primary:#1b6bff!important;--primary-foreground:#fff!important;--accent:#6ea8ff!important;--accent-foreground:#0f2347!important;--font-display:'Outfit',ui-sans-serif,system-ui,sans-serif!important}
+html,body,button,input,select,textarea{font-family:'Outfit',system-ui,sans-serif!important}
+body{background:#fff!important;color:#0f2347!important}
+body::before{content:"";position:fixed;left:0;right:0;bottom:0;height:58vh;z-index:-1;pointer-events:none;background:repeating-linear-gradient(90deg,rgba(255,255,255,.22) 0 44px,rgba(255,255,255,0) 44px 88px),linear-gradient(180deg,rgba(255,255,255,0) 0,#dbe8ff 38%,#86adff 72%,#2f6bff 100%)}
+h1,h2,h3,h4{color:#0f2347!important;font-family:'Outfit',system-ui,sans-serif!important;letter-spacing:-.02em}
+h1{text-transform:uppercase;font-weight:800!important}
+a{color:#1b6bff}
+button:not([class*=tab]):not([class*=ghost]):not([class*=alt]):not([class*=link]):not([class*=icon]):not([class*=chip]),.btn:not(.alt),input[type=submit],input[type=button]{background:linear-gradient(180deg,#4b8bff,#1b62f0)!important;color:#fff!important;border:0!important;border-radius:9999px!important;box-shadow:0 8px 18px rgba(27,107,255,.35),inset 0 1px 0 rgba(255,255,255,.35)}
+input,select,textarea{background:rgba(255,255,255,.92)!important;color:#0f2347!important;border:1px solid #d9e3f5!important;border-radius:12px!important}
+input[type=checkbox],input[type=radio]{accent-color:#1b6bff}
+th{background:#eef3fc!important;color:#0f2347!important}td,th{border-color:#d9e3f5!important}
+.card,.panel,.box,.tile,.kpi,[class*="card"]{background:rgba(255,255,255,.74)!important;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.9)!important;border-radius:20px!important;box-shadow:0 10px 30px rgba(15,35,71,.10)!important}
+</style></head>
+<body>
+
+<div id="gate" style="max-width:340px;margin:90px auto;" class="card">
+  <div class="brand" style="margin-bottom:12px;">COGWELL</div>
+  <label>Signed in with your Cogwell account</label>
+  <input type="hidden" id="pw" value="os">
+  <div class="row" style="margin-top:12px;"><button class="btn" id="loginBtn">Open</button></div>
+  <div class="err" id="gateErr"></div>
+</div>
+
+<div id="app" hidden>
+  <header>
+    <div class="brand">COGWELL<small>Invoicing</small></div>
+    <div class="tabs">
+      <button id="tabDash" class="on">Dashboard</button>
+      <button id="tabNew">New invoice</button>
+    </div>
+  </header>
+  <main>
+    <section id="dash">
+      <div class="stats" id="stats"></div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between;margin-bottom:10px;">
+          <b style="color:var(--navy)">All invoices &amp; links</b>
+          <button class="btn ghost" id="newBtn2">+ New invoice</button>
+        </div>
+        <div class="wrap">
+          <table>
+            <thead><tr><th>Invoice</th><th>Client</th><th>Total</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="newForm" hidden>
+      <div class="card">
+        <b style="color:var(--navy)">Client details</b> <span style="font-size:12px;color:#778">(the client can correct these on their link)</span>
+        <div class="grid2">
+          <div><label>Client / business name *</label><input id="cName"></div>
+          <div><label>Phone / WhatsApp</label><input id="cPhone" placeholder="+27 82 000 0000"></div>
+          <div><label>Email</label><input id="cEmail" type="email"></div>
+          <div><label>Address (optional)</label><input id="cAddress"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <b style="color:var(--navy)">Line items</b>
+        <div class="row" style="margin:10px 0;">
+          <select id="catSel" style="max-width:380px;"></select>
+          <button class="btn green" id="addCat">Add</button>
+          <button class="btn ghost" id="addDisc">+ Discount</button>
+          <button class="btn ghost" id="addCustom">+ Custom line</button>
+        </div>
+        <div id="items"></div>
+        <div class="totals" id="totals"></div>
+      </div>
+
+      <div class="card">
+        <div class="grid2">
+          <div>
+            <label>Deposit % (0 or 100 = single payment)</label>
+            <input id="depPct" type="number" min="0" max="100" step="1">
+          </div>
+        </div>
+        <label>Notes (one per line)</label>
+        <textarea id="notes"></textarea>
+      </div>
+
+      <div class="row">
+        <button class="btn green" id="saveLink">Create prefilled link</button>
+        <button class="btn" id="saveGen">Generate invoice now</button>
+        <button class="btn ghost" id="cancelNew">Cancel</button>
+      </div>
+      <div class="err" id="formErr"></div>
+
+      <div class="card" id="result" hidden style="margin-top:16px;">
+        <b style="color:var(--navy)">Saved</b>
+        <div class="linkbox" id="resLink" style="margin:10px 0;"></div>
+        <div class="row">
+          <button class="btn" id="resCopy">Copy link</button>
+          <a class="btn green" id="resWa" target="_blank" style="text-decoration:none;display:inline-block;">Send on WhatsApp</a>
+          <button class="btn ghost" id="resDone">Back to dashboard</button>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<div id="toast"></div>
+
+<script>
+var PASS = '', S = null, CAT = [], ITEMS = [], LAST = null;
+function $(id) { return document.getElementById(id); }
+function run(fn) {
+  var a = Array.prototype.slice.call(arguments, 1);
+  return new Promise(function (ok, no) {
+    OSRUN('invoicing').withSuccessHandler(ok).withFailureHandler(function (e) { no(e); })[fn].apply(null, a);
+  });
+}
+function money(n) { var neg = n < 0; return (neg ? '-' : '') + 'R' + Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function toast(m) { var t = $('toast'); t.textContent = m; t.style.display = 'block'; setTimeout(function () { t.style.display = 'none'; }, 2200); }
+function msg(e) { return (e && e.message) ? e.message : String(e); }
+function copy(text) {
+  var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+  var ok = false; try { ok = document.execCommand('copy'); } catch (x) {}
+  document.body.removeChild(ta);
+  if (ok) toast('Copied'); else window.prompt('Copy this link:', text);
+}
+function linkFor(token) { return S.webAppUrl + '?m=invoice&d=' + token; }
+function waLink(inv) {
+  var p = (inv.client.phone || '').replace(/\D/g, ''); if (p.indexOf('0') === 0) p = '27' + p.slice(1);
+  var link = linkFor(inv.token);
+  var text = inv.invoiceNo
+    ? 'Hi, here is your invoice ' + inv.invoiceNo + ' (' + money(inv.total) + ') from Cogwell: ' + link
+    : 'Hi, please confirm your details and generate your Cogwell invoice here: ' + link;
+  return 'https://wa.me/' + p + '?text=' + encodeURIComponent(text);
+}
+
+/* login */
+async function login() {
+  PASS = $('pw').value; $('gateErr').textContent = '';
+  try {
+    var d = await run('adminBootstrap', PASS);
+    S = d; CAT = d.catalogue;
+    $('gate').hidden = true; $('app').hidden = false;
+    renderAll(); resetForm(d.defaults);
+  } catch (e) { $('gateErr').textContent = msg(e); }
+}
+$('loginBtn').onclick = login; $('loginBtn').textContent = 'Open invoicing'; setTimeout(login, 0);
+$('pw').onkeydown = function (e) { if (e.key === 'Enter') login(); };
+
+/* tabs */
+function show(which) {
+  $('dash').hidden = which !== 'dash'; $('newForm').hidden = which !== 'new';
+  $('tabDash').className = which === 'dash' ? 'on' : ''; $('tabNew').className = which === 'new' ? 'on' : '';
+  window.scrollTo(0, 0);
+}
+$('tabDash').onclick = function () { show('dash'); };
+$('tabNew').onclick = $('newBtn2').onclick = function () { $('result').hidden = true; show('new'); };
+$('cancelNew').onclick = $('resDone').onclick = function () { show('dash'); };
+
+/* dashboard */
+function renderAll() {
+  var s = S.stats;
+  var cards = [['Invoices generated', s.generated], ['Invoices sent', s.sent], ['This month', s.thisMonth], ['Links awaiting client', s.pendingLinks],
+    ['Total invoiced', money(s.invoiced)], ['Collected', money(s.collected)], ['Outstanding', money(s.outstanding)], ['Last invoice no.', s.lastNo]];
+  $('stats').innerHTML = cards.map(function (c) { return '<div class="stat"><span>' + c[0] + '</span><b>' + c[1] + '</b></div>'; }).join('');
+
+  var statuses = ['Generated', 'Sent', 'Deposit Paid', 'Paid'];
+  $('rows').innerHTML = S.invoices.length ? S.invoices.map(function (i) {
+    var acts = '<button class="sm" data-act="copy" data-t="' + i.token + '">Copy link</button>' +
+      '<a class="sm" target="_blank" href="' + waLink(i) + '">WhatsApp</a>';
+    if (!i.invoiceNo) {
+      acts += '<button class="sm" data-act="gen" data-t="' + i.token + '">Generate now</button><button class="sm red" data-act="del" data-t="' + i.token + '">Delete</button>';
+    } else {
+      acts += '<a class="sm" target="_blank" href="' + esc(i.pdfUrl) + '">PDF</a>';
+      if (i.client.email) acts += '<button class="sm" data-act="mail" data-t="' + i.token + '">Email</button>';
+      acts += '<br><select data-act="status" data-t="' + i.token + '" style="width:auto;padding:4px;font-size:12px;">' +
+        statuses.map(function (st) { return '<option' + (st === i.status ? ' selected' : '') + '>' + st + '</option>'; }).join('') + '</select>';
+    }
+    return '<tr><td><b>' + esc(i.invoiceNo || '—') + '</b></td><td>' + esc(i.client.name) + '<br><span style="color:#778;font-size:11px;">' + esc(i.client.phone) + '</span></td>' +
+      '<td>' + money(i.total) + '</td><td><span class="pill ' + i.status.replace(' ', '') + '">' + i.status + '</span>' +
+      (i.sent ? '<br><span style="color:#778;font-size:11px;">sent ' + esc(i.sent) + '</span>' : '') + '</td>' +
+      '<td style="font-size:11px;color:#556;">' + esc(i.created) + '</td><td>' + acts + '</td></tr>';
+  }).join('') : '<tr><td colspan="6" style="color:#778;">No invoices yet.</td></tr>';
+}
+
+async function act(fn, args, okMsg) {
+  try { var r = await run.apply(null, [fn, PASS].concat(args)); S = Object.assign(S, r.state || r); renderAll(); toast(okMsg); }
+  catch (e) { toast(msg(e)); }
+}
+$('rows').onclick = function (e) {
+  var b = e.target.closest('[data-act]'); if (!b || b.tagName === 'SELECT') return;
+  var t = b.getAttribute('data-t'), a = b.getAttribute('data-act');
+  if (a === 'copy') copy(linkFor(t));
+  if (a === 'gen') act('adminGenerate', [t], 'Invoice generated');
+  if (a === 'del' && confirm('Delete this draft link?')) act('adminDelete', [t], 'Deleted');
+  if (a === 'mail' && confirm('Email this invoice to the client now?')) act('adminEmail', [t], 'Emailed');
+};
+$('rows').onchange = function (e) {
+  if (e.target.getAttribute('data-act') === 'status') act('adminSetStatus', [e.target.getAttribute('data-t'), e.target.value], 'Status updated');
+};
+
+/* form */
+function resetForm(d) {
+  ['cName', 'cPhone', 'cEmail', 'cAddress'].forEach(function (id) { $(id).value = ''; });
+  ITEMS = []; $('depPct').value = d.depositPct; $('notes').value = d.notes.join('\n');
+  $('catSel').innerHTML = CAT.map(function (c, i) { return '<option value="' + i + '">' + esc(c.name) + (c.price ? ' — ' + money(c.price) : '') + '</option>'; }).join('');
+  renderItems();
+}
+$('addCat').onclick = function () {
+  var c = CAT[Number($('catSel').value)]; if (!c) return;
+  ITEMS.push({ name: c.name, desc: c.desc, amount: c.price, scopeTitle: c.scopeTitle, scope: c.scope, scopeNote: c.scopeNote }); renderItems();
+};
+$('addDisc').onclick = function () { ITEMS.push({ name: 'Package discount', desc: '', amount: -500, scope: [] }); renderItems(); };
+$('addCustom').onclick = function () { ITEMS.push({ name: '', desc: '', amount: 0, scope: [] }); renderItems(); };
+
+function renderItems() {
+  $('items').innerHTML = ITEMS.map(function (it, i) {
+    return '<div class="itemrow"><input data-i="' + i + '" data-k="name" placeholder="Item" value="' + esc(it.name) + '">' +
+      '<input data-i="' + i + '" data-k="desc" placeholder="Description" value="' + esc(it.desc) + '">' +
+      '<input data-i="' + i + '" data-k="amount" type="number" step="0.01" value="' + it.amount + '">' +
+      '<button class="sm red" data-rm="' + i + '">✕</button></div>';
+  }).join('') || '<div style="color:#778;font-size:13px;">No items yet. Pick from the catalogue above.</div>';
+  totals();
+}
+function totals() {
+  var cents = ITEMS.reduce(function (s, it) { return s + Math.round(Number(it.amount || 0) * 100); }, 0);
+  var pct = Math.min(100, Math.max(0, Number($('depPct').value) || 0));
+  var dep = (pct <= 0 || pct >= 100) ? (pct >= 100 ? cents : 0) : Math.round(cents * pct / 100);
+  $('totals').innerHTML = '<b>Total: ' + money(cents / 100) + '</b>' +
+    ((pct > 0 && pct < 100) ? '<br>Deposit ' + money(dep / 100) + ' · Balance ' + money((cents - dep) / 100) : '');
+}
+$('items').oninput = function (e) {
+  var i = e.target.getAttribute('data-i'); if (i == null) return;
+  var k = e.target.getAttribute('data-k'); ITEMS[i][k] = k === 'amount' ? e.target.value : e.target.value; totals();
+};
+$('items').onclick = function (e) {
+  var r = e.target.getAttribute('data-rm'); if (r == null) return; ITEMS.splice(Number(r), 1); renderItems();
+};
+$('depPct').oninput = totals;
+
+async function save(gen) {
+  $('formErr').textContent = '';
+  var payload = {
+    client: { name: $('cName').value, phone: $('cPhone').value, email: $('cEmail').value, address: $('cAddress').value },
+    items: ITEMS, depositPct: $('depPct').value,
+    notes: $('notes').value.split('\n').map(function (s) { return s.trim(); }).filter(String)
+  };
+  try {
+    var r = await run('adminSave', PASS, payload, gen);
+    S = Object.assign(S, r.state); renderAll();
+    var inv = S.invoices.filter(function (i) { return i.token === r.token; })[0];
+    LAST = inv; $('resLink').textContent = linkFor(r.token); $('resWa').href = waLink(inv);
+    $('result').hidden = false; $('result').scrollIntoView();
+    toast(gen ? 'Invoice ' + inv.invoiceNo + ' generated' : 'Prefilled link created');
+    resetForm(S.defaults || { depositPct: 50, notes: [] });
+  } catch (e) { $('formErr').textContent = msg(e); }
+}
+$('saveLink').onclick = function () { save(false); };
+$('saveGen').onclick = function () { save(true); };
+$('resCopy').onclick = function () { copy($('resLink').textContent); };
+</script>
+</body>
+</html>

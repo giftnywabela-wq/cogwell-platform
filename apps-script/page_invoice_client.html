@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!--OS_BOOT-->
+<script>
+/* Cogwell platform bridge: lets every page keep its original google.script.run code. */
+window.OSRUN = function (mod) {
+  function make(ok, no) {
+    return new Proxy({}, {
+      get: function (_, k) {
+        if (k === 'then') return undefined;
+        if (k === 'withSuccessHandler') return function (f) { return make(f, no); };
+        if (k === 'withFailureHandler') return function (f) { return make(ok, f); };
+        if (k === 'withUserObject') return function () { return make(ok, no); };
+        return function () {
+          var args = Array.prototype.slice.call(arguments);
+          google.script.run
+            .withSuccessHandler(function (raw) {
+              var o;
+              try { o = JSON.parse(raw); } catch (e) { if (no) no(e); return; }
+              if (o.err) {
+                if (o.err === 'Not signed in') window.OS_expired && window.OS_expired();
+                if (no) no({ message: o.err, name: 'Error' });
+              } else if (ok) { ok(o.v); }
+            })
+            .withFailureHandler(function (e) { if (no) no(e); })
+            .osApi(window.OS_TOKEN || '', mod, String(k), JSON.stringify(args));
+        };
+      }
+    });
+  }
+  return make(null, null);
+};
+window.OS_expired = function () {
+  if (document.getElementById('os-expired')) return;
+  var d = document.createElement('div'); d.id = 'os-expired';
+  d.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99999;background:#b42318;color:#fff;padding:10px 16px;font:600 14px system-ui,sans-serif;text-align:center';
+  d.textContent = 'Your session expired. Reload this page and sign in again.';
+  document.body.appendChild(d);
+  try { parent.postMessage({ cogwell: 'signedout' }, '*'); } catch (e) {}
+};
+</script>
+
+<base target="_top">
+<meta charset="utf-8">
+<style>
+  :root { --green:#1b6bff; --navy:#1F3A5F; --light:#F5F6FA; --line:#dfe3ea; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:Arial,Helvetica,sans-serif; color:#111; background:var(--light); }
+  .wrap { max-width:640px; margin:0 auto; padding:18px; }
+  .brand { font-weight:bold; color:var(--green); letter-spacing:5px; font-size:26px; padding:10px 0 12px; border-bottom:3px solid var(--green); margin-bottom:18px; }
+  h1 { font-size:20px; color:var(--navy); margin:0 0 6px; }
+  p.sub { color:#556; font-size:14px; margin:0 0 16px; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:8px; padding:16px; margin-bottom:16px; }
+  label { display:block; font-size:12px; font-weight:bold; color:var(--navy); margin:10px 0 4px; }
+  input { width:100%; padding:11px 10px; border:1px solid #cdd3dd; border-radius:6px; font-size:15px; font-family:inherit; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  td { padding:9px 4px; border-bottom:1px solid var(--line); vertical-align:top; }
+  td.amt { text-align:right; white-space:nowrap; }
+  .small { font-size:12px; color:#556; }
+  .total td { font-weight:bold; background:#E8F5D0; border-top:2px solid var(--green); padding:10px 6px; }
+  button.btn { width:100%; background:var(--green); color:var(--navy); border:0; border-radius:6px; padding:14px; font-size:16px; font-weight:bold; cursor:pointer; }
+  button.btn.navy { background:var(--navy); color:#fff; }
+  button.btn[disabled] { opacity:.6; cursor:wait; }
+  .err { color:#b33; font-size:13px; margin-top:10px; }
+  .ok { background:#E8F5D0; border:1px solid var(--green); }
+  [hidden] { display:none !important; }
+</style>
+<style id="cw-skin">@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
+:root,.dark{color-scheme:light;--primary:#1b6bff!important;--primary-foreground:#fff!important;--accent:#6ea8ff!important;--accent-foreground:#0f2347!important;--font-display:'Outfit',ui-sans-serif,system-ui,sans-serif!important}
+html,body,button,input,select,textarea{font-family:'Outfit',system-ui,sans-serif!important}
+body{background:#fff!important;color:#0f2347!important}
+body::before{content:"";position:fixed;left:0;right:0;bottom:0;height:58vh;z-index:-1;pointer-events:none;background:repeating-linear-gradient(90deg,rgba(255,255,255,.22) 0 44px,rgba(255,255,255,0) 44px 88px),linear-gradient(180deg,rgba(255,255,255,0) 0,#dbe8ff 38%,#86adff 72%,#2f6bff 100%)}
+h1,h2,h3,h4{color:#0f2347!important;font-family:'Outfit',system-ui,sans-serif!important;letter-spacing:-.02em}
+h1{text-transform:uppercase;font-weight:800!important}
+a{color:#1b6bff}
+button:not([class*=tab]):not([class*=ghost]):not([class*=alt]):not([class*=link]):not([class*=icon]):not([class*=chip]),.btn:not(.alt),input[type=submit],input[type=button]{background:linear-gradient(180deg,#4b8bff,#1b62f0)!important;color:#fff!important;border:0!important;border-radius:9999px!important;box-shadow:0 8px 18px rgba(27,107,255,.35),inset 0 1px 0 rgba(255,255,255,.35)}
+input,select,textarea{background:rgba(255,255,255,.92)!important;color:#0f2347!important;border:1px solid #d9e3f5!important;border-radius:12px!important}
+input[type=checkbox],input[type=radio]{accent-color:#1b6bff}
+th{background:#eef3fc!important;color:#0f2347!important}td,th{border-color:#d9e3f5!important}
+.card,.panel,.box,.tile,.kpi,[class*="card"]{background:rgba(255,255,255,.74)!important;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.9)!important;border-radius:20px!important;box-shadow:0 10px 30px rgba(15,35,71,.10)!important}
+</style></head>
+<body>
+<div class="wrap">
+  <div class="brand">COGWELL</div>
+
+  <div id="loading" class="card">Loading your invoice…</div>
+  <div id="bad" class="card" hidden><b>This link is not valid.</b><p class="small">Please contact Cogwell Solutions for a new one.</p></div>
+
+  <div id="form" hidden>
+    <h1>Your invoice from Cogwell Solutions</h1>
+    <p class="sub">Check your billing details below. When you confirm, your invoice is generated and sent to you.</p>
+
+    <div class="card">
+      <b style="color:var(--navy)">Billing details</b>
+      <label>Name / business name *</label><input id="name">
+      <label>Phone / WhatsApp</label><input id="phone">
+      <label>Email (we'll send the invoice here)</label><input id="email" type="email">
+      <label>Address (optional)</label><input id="address">
+    </div>
+
+    <div class="card">
+      <b style="color:var(--navy)">What you're being invoiced for</b>
+      <table id="items" style="margin-top:8px;"></table>
+      <p class="small" id="pay" style="margin-bottom:0;"></p>
+    </div>
+
+    <button class="btn" id="go">Confirm &amp; generate invoice</button>
+    <div class="err" id="err"></div>
+  </div>
+
+  <div id="done" hidden>
+    <div class="card ok">
+      <h1 id="doneTitle">Invoice ready</h1>
+      <p class="sub" id="doneSub"></p>
+      <button class="btn navy" id="dl">Download PDF</button>
+      <div class="err" id="dlErr"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+var TOKEN = <?!= JSON.stringify(token) ?>;
+var VIEW = null;
+function $(id) { return document.getElementById(id); }
+function run(fn) {
+  var a = Array.prototype.slice.call(arguments, 1);
+  return new Promise(function (ok, no) { OSRUN('invoicing').withSuccessHandler(ok).withFailureHandler(function (e) { no(e); })[fn].apply(null, a); });
+}
+function money(n) { var neg = n < 0; return (neg ? '-' : '') + 'R' + Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+function msg(e) { return (e && e.message) ? e.message : String(e); }
+
+function showDone(v) {
+  $('form').hidden = true; $('done').hidden = false;
+  $('doneTitle').textContent = 'Invoice ' + v.invoiceNo + ' is ready';
+  $('doneSub').textContent = 'Total ' + money(v.total) + '. Banking details and your payment reference (' + v.invoiceNo + ') are on the invoice.' +
+    (v.client.email ? ' A copy has been emailed to ' + v.client.email + '.' : '');
+}
+
+async function init() {
+  try {
+    VIEW = await run('getDraft', TOKEN);
+    $('loading').hidden = true;
+    if (VIEW.invoiceNo) { showDone(VIEW); return; }
+    $('form').hidden = false;
+    $('name').value = VIEW.client.name; $('phone').value = VIEW.client.phone; $('email').value = VIEW.client.email; $('address').value = VIEW.client.address;
+    $('items').innerHTML = VIEW.items.map(function (i) {
+      return '<tr><td><b>' + esc(i.name) + '</b>' + (i.desc ? '<br><span class="small">' + esc(i.desc) + '</span>' : '') + '</td><td class="amt">' + money(i.amount) + '</td></tr>';
+    }).join('') + '<tr class="total"><td>TOTAL</td><td class="amt">' + money(VIEW.total) + '</td></tr>';
+    $('pay').textContent = (VIEW.depositPct > 0 && VIEW.depositPct < 100)
+      ? 'Payment: ' + money(VIEW.deposit) + ' deposit to start, ' + money(VIEW.balance) + ' balance on completion.'
+      : 'Payment: ' + money(VIEW.total) + '.';
+  } catch (e) { $('loading').hidden = true; $('bad').hidden = false; }
+}
+
+$('go').onclick = async function () {
+  $('err').textContent = ''; $('go').disabled = true; $('go').textContent = 'Generating…';
+  try {
+    var v = await run('clientGenerate', TOKEN, { name: $('name').value, phone: $('phone').value, email: $('email').value, address: $('address').value });
+    VIEW = v; showDone(v);
+  } catch (e) { $('err').textContent = msg(e); $('go').disabled = false; $('go').textContent = 'Confirm & generate invoice'; }
+};
+
+$('dl').onclick = async function () {
+  $('dlErr').textContent = ''; $('dl').disabled = true;
+  try {
+    var f = await run('clientPdf', TOKEN);
+    var bin = atob(f.b64), arr = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    var url = URL.createObjectURL(new Blob([arr], { type: 'application/pdf' }));
+    var a = document.createElement('a'); a.href = url; a.download = f.name; document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+  } catch (e) { $('dlErr').textContent = msg(e); }
+  $('dl').disabled = false;
+};
+
+init();
+</script>
+</body>
+</html>

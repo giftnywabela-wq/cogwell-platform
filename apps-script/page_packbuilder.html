@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!--OS_BOOT-->
+<script>
+/* Cogwell platform bridge: lets every page keep its original google.script.run code. */
+window.OSRUN = function (mod) {
+  function make(ok, no) {
+    return new Proxy({}, {
+      get: function (_, k) {
+        if (k === 'then') return undefined;
+        if (k === 'withSuccessHandler') return function (f) { return make(f, no); };
+        if (k === 'withFailureHandler') return function (f) { return make(ok, f); };
+        if (k === 'withUserObject') return function () { return make(ok, no); };
+        return function () {
+          var args = Array.prototype.slice.call(arguments);
+          google.script.run
+            .withSuccessHandler(function (raw) {
+              var o;
+              try { o = JSON.parse(raw); } catch (e) { if (no) no(e); return; }
+              if (o.err) {
+                if (o.err === 'Not signed in') window.OS_expired && window.OS_expired();
+                if (no) no({ message: o.err, name: 'Error' });
+              } else if (ok) { ok(o.v); }
+            })
+            .withFailureHandler(function (e) { if (no) no(e); })
+            .osApi(window.OS_TOKEN || '', mod, String(k), JSON.stringify(args));
+        };
+      }
+    });
+  }
+  return make(null, null);
+};
+window.OS_expired = function () {
+  if (document.getElementById('os-expired')) return;
+  var d = document.createElement('div'); d.id = 'os-expired';
+  d.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99999;background:#b42318;color:#fff;padding:10px 16px;font:600 14px system-ui,sans-serif;text-align:center';
+  d.textContent = 'Your session expired. Reload this page and sign in again.';
+  document.body.appendChild(d);
+  try { parent.postMessage({ cogwell: 'signedout' }, '*'); } catch (e) {}
+};
+</script>
+
+<base target="_top">
+<style>
+  body{font:14px/1.45 "Segoe UI",Roboto,Arial,sans-serif;margin:0;padding:16px;color:#1b2430}
+  h2{font-size:16px;margin:0 0 4px}
+  p.hint{color:#5d6877;margin:0 0 12px;font-size:13px}
+  textarea{width:100%;height:200px;box-sizing:border-box;font:13px/1.4 Consolas,monospace;padding:8px;border:1px solid #c9ced6;border-radius:6px}
+  .box{border:2px dashed #c9ced6;border-radius:8px;padding:12px;margin:10px 0;text-align:center;color:#5d6877}
+  .box.drag{border-color:#1f4e79;background:#eef4fa}
+  .row{display:flex;align-items:center;gap:10px;margin-top:12px}
+  button{font:inherit;font-weight:600;padding:10px 16px;border:0;border-radius:6px;background:#1f4e79;color:#fff;cursor:pointer}
+  button[disabled]{opacity:.55;cursor:wait}
+  label.chk{display:flex;gap:6px;align-items:center}
+  #files{margin-top:6px;font-size:12px;color:#1b2430;text-align:left}
+  #out{margin-top:14px;font-size:13px}
+  .ok{color:#1b6bff;font-weight:600}.bad{color:#b3261e;font-weight:600}
+  ul{margin:6px 0 0 18px;padding:0}
+  details{margin-top:12px;font-size:12px;color:#5d6877}
+  pre{background:#f4f5f7;padding:8px;border-radius:6px;overflow:auto;font-size:12px}
+</style>
+<style id="cw-skin">@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
+:root,.dark{color-scheme:light;--primary:#1b6bff!important;--primary-foreground:#fff!important;--accent:#6ea8ff!important;--accent-foreground:#0f2347!important;--font-display:'Outfit',ui-sans-serif,system-ui,sans-serif!important}
+html,body,button,input,select,textarea{font-family:'Outfit',system-ui,sans-serif!important}
+body{background:#fff!important;color:#0f2347!important}
+body::before{content:"";position:fixed;left:0;right:0;bottom:0;height:58vh;z-index:-1;pointer-events:none;background:repeating-linear-gradient(90deg,rgba(255,255,255,.22) 0 44px,rgba(255,255,255,0) 44px 88px),linear-gradient(180deg,rgba(255,255,255,0) 0,#dbe8ff 38%,#86adff 72%,#2f6bff 100%)}
+h1,h2,h3,h4{color:#0f2347!important;font-family:'Outfit',system-ui,sans-serif!important;letter-spacing:-.02em}
+h1{text-transform:uppercase;font-weight:800!important}
+a{color:#1b6bff}
+button:not([class*=tab]):not([class*=ghost]):not([class*=alt]):not([class*=link]):not([class*=icon]):not([class*=chip]),.btn:not(.alt),input[type=submit],input[type=button]{background:linear-gradient(180deg,#4b8bff,#1b62f0)!important;color:#fff!important;border:0!important;border-radius:9999px!important;box-shadow:0 8px 18px rgba(27,107,255,.35),inset 0 1px 0 rgba(255,255,255,.35)}
+input,select,textarea{background:rgba(255,255,255,.92)!important;color:#0f2347!important;border:1px solid #d9e3f5!important;border-radius:12px!important}
+input[type=checkbox],input[type=radio]{accent-color:#1b6bff}
+th{background:#eef3fc!important;color:#0f2347!important}td,th{border-color:#d9e3f5!important}
+.card,.panel,.box,.tile,.kpi,[class*="card"]{background:rgba(255,255,255,.74)!important;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.9)!important;border-radius:20px!important;box-shadow:0 10px 30px rgba(15,35,71,.10)!important}
+</style></head>
+<body>
+<h2>Import core posts</h2>
+<p class="hint">Paste text, or upload files (.txt, .md, .json, .csv) or a .zip containing them (images in the zip can be used by posts that name them).</p>
+<textarea id="t" placeholder="Paste JSON from the generator prompt, or the plain-text layout (see below)..."></textarea>
+<div class="box" id="drop">Drop files here or <input type="file" id="f" multiple accept=".txt,.md,.json,.csv,.zip"><div id="files"></div></div>
+<div class="row">
+  <label class="chk"><input type="checkbox" id="b" checked> Build the pack right after importing</label>
+  <button id="go">Import</button>
+</div>
+<div id="out"></div>
+<details><summary>Plain-text layout</summary>
+<pre>POST
+Series: Missed Call Monday
+Hook: I lose a job every time I miss a call on the truck.
+Points:
+- On the truck, the phone rings and you cannot answer
+- After hours, the caller tries the next company
+- Voicemail is rarely returned in time
+CTA: Save this for your next team meeting.
+Hashtags: #tradesbusiness #smallbusiness
+---
+POST
+Hook: ...</pre></details>
+<script>
+var chosen = [];
+var drop = document.getElementById('drop'), fin = document.getElementById('f');
+function show(){ document.getElementById('files').textContent = chosen.map(function(f){return f.name+' ('+Math.round(f.size/1024)+' KB)';}).join(', '); }
+fin.onchange = function(){ chosen = chosen.concat([].slice.call(fin.files)); show(); };
+['dragover','dragenter'].forEach(function(e){drop.addEventListener(e,function(ev){ev.preventDefault();drop.classList.add('drag');});});
+['dragleave','drop'].forEach(function(e){drop.addEventListener(e,function(ev){ev.preventDefault();drop.classList.remove('drag');});});
+drop.addEventListener('drop',function(ev){ chosen = chosen.concat([].slice.call(ev.dataTransfer.files)); show(); });
+function read(f){ return new Promise(function(res,rej){ var r=new FileReader(); r.onload=function(){res({name:f.name,mime:f.type||'application/octet-stream',b64:String(r.result).split(',')[1]});}; r.onerror=rej; r.readAsDataURL(f); }); }
+function esc(s){ return String(s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}); }
+var out = document.getElementById('out'), go = document.getElementById('go');
+go.onclick = function(){
+  var text = document.getElementById('t').value;
+  var total = chosen.reduce(function(a,f){return a+f.size;},0);
+  if(!text.trim() && !chosen.length){ out.innerHTML='<span class="bad">Paste some text or choose a file first.</span>'; return; }
+  if(total > 7*1024*1024){ out.innerHTML='<span class="bad">Files total more than 7 MB. Put them in the Drive Inbox folder instead (menu: Import from Drive Inbox and build).</span>'; return; }
+  go.disabled = true; out.textContent = 'Reading files...';
+  Promise.all(chosen.map(read)).then(function(files){
+    out.textContent = 'Importing...';
+    OSRUN('packbuilder').withSuccessHandler(function(s){ done(s); }).withFailureHandler(fail).importFromDialog({text:text, files:files});
+  }).catch(function(){ fail({message:'Could not read a file.'}); });
+};
+function fail(e){ go.disabled=false; out.innerHTML='<span class="bad">'+esc(e.message||e)+'</span>'; }
+function done(s){
+  var h = '<div class="ok">'+s.batchId+': '+s.found+' post(s) found, '+s.queued+' queued'+(s.errored?', '+s.errored+' with errors':'')+'.</div>';
+  if(s.problems.length){ h += '<ul>'+s.problems.map(function(p){return '<li>'+esc(p)+'</li>';}).join('')+'</ul>'; }
+  if(s.notes.length){ h += '<ul>'+s.notes.map(function(p){return '<li>'+esc(p)+'</li>';}).join('')+'</ul>'; }
+  out.innerHTML = h;
+  if(document.getElementById('b').checked && s.queued>0){
+    out.innerHTML += '<p>Building the pack... this can take a few minutes. You can close this window; the zip will be emailed.</p>';
+    OSRUN('packbuilder').withSuccessHandler(function(m){ out.innerHTML += '<p class="ok">'+esc(m)+'</p>'; go.disabled=false; }).withFailureHandler(fail).startBuild();
+  } else { go.disabled=false; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html><head><base target="_top"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{margin:0;font:15px/1.5 system-ui,sans-serif;color:#0f2347;background:#f7f9ff;display:grid;place-items:center;min-height:100vh}
+.c{background:#fff;border:1px solid #d9e3f5;border-radius:20px;padding:28px;max-width:360px;width:calc(100% - 32px);box-shadow:0 10px 30px rgba(15,35,71,.1)}
+h1{font-size:22px;margin:0 0 4px}p{color:#5d6b88;margin:0 0 16px}
+input{width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #d9e3f5;border-radius:10px;font:inherit;margin-bottom:12px}
+button,a.b{display:block;width:100%;box-sizing:border-box;text-align:center;text-decoration:none;border:0;background:#1b6bff;color:#fff;padding:11px;border-radius:9999px;font:600 15px inherit;cursor:pointer}
+.e{color:#b42318;min-height:20px;font-size:14px;margin-top:8px}
+</style></head><body>
+<div class="c">
+  <h1>Cogwell</h1><p id="msg">Enter your email and we will send you a sign-in code.</p>
+  <div id="s1"><input id="em" type="email" placeholder="you@company.com" autocomplete="email"><button id="b1">Send code</button></div>
+  <div id="s2" hidden><input id="cd" inputmode="numeric" maxlength="6" placeholder="6-digit code" autocomplete="one-time-code"><button id="b2">Sign in</button></div>
+  <div id="s3" hidden><a class="b" id="go" href="#">Open <span id="nm"></span></a></div>
+  <div class="e" id="er"></div>
+</div>
+<script>
+var MOD = <?!= JSON.stringify(mod) ?>, BASE = <?!= JSON.stringify(base) ?>;
+function $(i){return document.getElementById(i)}
+function fail(e){$('er').textContent=(e&&e.message)||String(e)}
+$('b1').onclick=function(){$('er').textContent='';var b=this;b.disabled=true;
+  google.script.run.withSuccessHandler(function(){b.disabled=false;$('s1').hidden=true;$('s2').hidden=false;$('msg').textContent='If that email is on the invite list, a code is on its way.'})
+  .withFailureHandler(function(e){b.disabled=false;fail(e)}).osLogin($('em').value)};
+$('b2').onclick=function(){$('er').textContent='';var b=this;b.disabled=true;
+  google.script.run.withSuccessHandler(function(raw){var r=JSON.parse(raw);
+    google.script.run.withSuccessHandler(function(t){b.disabled=false;$('s2').hidden=true;$('s3').hidden=false;$('msg').textContent='Signed in.';$('go').href=BASE+'?m='+encodeURIComponent(MOD)+'&k='+encodeURIComponent(t)}).withFailureHandler(function(e){b.disabled=false;fail(e)}).osTicket(r.token)})
+  .withFailureHandler(function(e){b.disabled=false;fail(e)}).osVerify($('em').value,$('cd').value)};
+</script></body></html>

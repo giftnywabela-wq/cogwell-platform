@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html><head>
+<!--OS_BOOT-->
+<script>
+/* Cogwell platform bridge: lets every page keep its original google.script.run code. */
+window.OSRUN = function (mod) {
+  function make(ok, no) {
+    return new Proxy({}, {
+      get: function (_, k) {
+        if (k === 'then') return undefined;
+        if (k === 'withSuccessHandler') return function (f) { return make(f, no); };
+        if (k === 'withFailureHandler') return function (f) { return make(ok, f); };
+        if (k === 'withUserObject') return function () { return make(ok, no); };
+        return function () {
+          var args = Array.prototype.slice.call(arguments);
+          google.script.run
+            .withSuccessHandler(function (raw) {
+              var o;
+              try { o = JSON.parse(raw); } catch (e) { if (no) no(e); return; }
+              if (o.err) {
+                if (o.err === 'Not signed in') window.OS_expired && window.OS_expired();
+                if (no) no({ message: o.err, name: 'Error' });
+              } else if (ok) { ok(o.v); }
+            })
+            .withFailureHandler(function (e) { if (no) no(e); })
+            .osApi(window.OS_TOKEN || '', mod, String(k), JSON.stringify(args));
+        };
+      }
+    });
+  }
+  return make(null, null);
+};
+window.OS_expired = function () {
+  if (document.getElementById('os-expired')) return;
+  var d = document.createElement('div'); d.id = 'os-expired';
+  d.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99999;background:#b42318;color:#fff;padding:10px 16px;font:600 14px system-ui,sans-serif;text-align:center';
+  d.textContent = 'Your session expired. Reload this page and sign in again.';
+  document.body.appendChild(d);
+  try { parent.postMessage({ cogwell: 'signedout' }, '*'); } catch (e) {}
+};
+</script>
+<base target="_top"><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EEF1F5;--card:#fff;--ink:#14213D;--mute:#5B667A;--line:#D5DBE5;--ok:#0E9F6E;--late:#C2410C;--warn:#B45309}
+@media(prefers-color-scheme:dark){:root{--bg:#0E1626;--card:#16213A;--ink:#EAF0FA;--mute:#9AA7BF;--line:#2A3857;--ok:#34D399;--late:#FB923C;--warn:#FBBF24}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 Barlow,system-ui,sans-serif}
+header{padding:14px 16px 0;max-width:640px;margin:auto}h1{font:700 26px 'Barlow Condensed',sans-serif;margin:0}
+header small{color:var(--mute)}nav{display:flex;gap:6px;margin:12px 0}
+nav button,.chip{flex:1;padding:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;font:600 15px Barlow;cursor:pointer}
+nav .on,.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+main{max-width:640px;margin:auto;padding:0 16px 40px}
+.banner{padding:12px 14px;border-radius:8px;background:var(--card);border-left:5px solid var(--ok);margin-bottom:12px}
+.banner.late{border-color:var(--late)}
+.task,.lock,.p{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px;margin-bottom:8px}
+.task .t{flex:1;font-weight:500}.task small{display:block;color:var(--mute);font-weight:400}.task.done .t{text-decoration:line-through;color:var(--mute)}
+.chk{width:44px;height:44px;border-radius:8px;border:2px solid var(--line);background:none;color:#fff;font-size:22px;cursor:pointer}
+.done .chk{background:var(--ok);border-color:var(--ok)}
+.step{display:flex;gap:4px}.step button{width:40px;height:40px;border-radius:8px;border:1px solid var(--line);background:none;color:var(--ink);font-size:20px}
+.step input{width:56px;text-align:center;border:1px solid var(--line);border-radius:8px;background:none;color:var(--ink);font:600 16px Barlow}
+.lock{color:var(--mute);border-style:dashed}h3{font-size:15px;color:var(--mute);margin:18px 0 8px}
+.chips{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}.chip{flex:none;padding:6px 12px}
+.p.me{border-color:var(--ink)}.rk{font:700 22px 'Barlow Condensed';width:24px;color:var(--mute)}
+.pn{flex:1;min-width:0}.pn b{display:block}.pn small{color:var(--mute)}
+.bar{height:6px;background:var(--line);border-radius:3px;margin:6px 0 4px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ok)}
+.pct{font:700 34px 'Barlow Condensed';min-width:68px;text-align:right}
+.tag{font-size:12px;font-weight:600;margin-right:8px}.tag.l{color:var(--late)}.tag.g{color:var(--ok)}
+textarea,input[type=date]{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--card);color:var(--ink);font:14px monospace}
+.go{padding:12px 16px;border:0;border-radius:8px;background:var(--ink);color:var(--bg);font:600 16px Barlow;margin:10px 8px 0 0}
+.err{color:var(--late)}pre{white-space:pre-wrap;font-size:13px;color:var(--mute)}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--warn);outline-offset:2px}
+</style><style id="cw-skin">@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
+:root,.dark{color-scheme:light;--primary:#1b6bff!important;--primary-foreground:#fff!important;--accent:#6ea8ff!important;--accent-foreground:#0f2347!important;--font-display:'Outfit',ui-sans-serif,system-ui,sans-serif!important}
+html,body,button,input,select,textarea{font-family:'Outfit',system-ui,sans-serif!important}
+body{background:#fff!important;color:#0f2347!important}
+body::before{content:"";position:fixed;left:0;right:0;bottom:0;height:58vh;z-index:-1;pointer-events:none;background:repeating-linear-gradient(90deg,rgba(255,255,255,.22) 0 44px,rgba(255,255,255,0) 44px 88px),linear-gradient(180deg,rgba(255,255,255,0) 0,#dbe8ff 38%,#86adff 72%,#2f6bff 100%)}
+h1,h2,h3,h4{color:#0f2347!important;font-family:'Outfit',system-ui,sans-serif!important;letter-spacing:-.02em}
+h1{text-transform:uppercase;font-weight:800!important}
+a{color:#1b6bff}
+button:not([class*=tab]):not([class*=ghost]):not([class*=alt]):not([class*=link]):not([class*=icon]):not([class*=chip]),.btn:not(.alt),input[type=submit],input[type=button]{background:linear-gradient(180deg,#4b8bff,#1b62f0)!important;color:#fff!important;border:0!important;border-radius:9999px!important;box-shadow:0 8px 18px rgba(27,107,255,.35),inset 0 1px 0 rgba(255,255,255,.35)}
+input,select,textarea{background:rgba(255,255,255,.92)!important;color:#0f2347!important;border:1px solid #d9e3f5!important;border-radius:12px!important}
+input[type=checkbox],input[type=radio]{accent-color:#1b6bff}
+th{background:#eef3fc!important;color:#0f2347!important}td,th{border-color:#d9e3f5!important}
+.card,.panel,.box,.tile,.kpi,[class*="card"]{background:rgba(255,255,255,.74)!important;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.9)!important;border-radius:20px!important;box-shadow:0 10px 30px rgba(15,35,71,.10)!important}
+</style></head><body>
+<header><h1 id="hn">Scoreboard</h1><small id="hs"></small>
+<nav><button id="n-today" onclick="tab='today';render()">My day</button><button id="n-board" onclick="tab='board';render()">Everyone</button><button id="n-plan" onclick="tab='plan';render()" hidden>Load plan</button></nav></header>
+<main id="app">Loading...</main>
+<script>
+const $=s=>document.querySelector(s);let S,tab='today',dept='All',busy=false;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function load(){OSRUN('scoreboard').withSuccessHandler(d=>{S=d;if(!busy)render()}).withFailureHandler(fail).api_state()}
+function fail(e){const m=e.message||'';$('#app').innerHTML=m.includes('NOT_REGISTERED')?'<p class=err>You are not on the team list yet. Ask an admin to add <b>'+esc(m.split(':').pop())+'</b> to the Users sheet.</p>':'<p class=err>'+esc(m)+'</p>'}
+function set(id,v){v=Math.max(0,+v||0);S.days.forEach(d=>d.tasks.forEach(t=>{if(t.id===id)t.done=v}));
+ S.days.forEach(d=>d.complete=d.tasks.every(t=>t.done>=t.target));busy=true;render();
+ OSRUN('scoreboard').withSuccessHandler(()=>{busy=false;load()}).withFailureHandler(e=>{busy=false;alert(e.message);load()}).api_set(id,v)}
+function row(t){const ok=t.done>=t.target,id="'"+t.id+"'";
+ const c=t.target===1&&!t.unit?`<button class=chk aria-label="Mark done" onclick="set(${id},${ok?0:1})">${ok?'&#10003;':''}</button>`
+ :`<div class=step><button onclick="set(${id},${t.done-1})">&minus;</button><input type=number inputmode=numeric value=${t.done} onchange="set(${id},this.value)"><button onclick="set(${id},${t.done+1})">+</button></div>`;
+ return `<div class="task ${ok?'done':''}"><div class=t>${esc(t.title)}<small>${t.done} of ${t.target} ${esc(t.unit||'')}</small></div>${c}</div>`}
+function mine(){if(!S.days.length)return '<p>No plan has been loaded yet.</p>';
+ const a=S.days.find(d=>!d.complete);if(!a)return '<div class=banner>Your whole plan is complete.</div>';
+ const late=a.date<S.today,n=S.days.filter(d=>d.date<S.today&&!d.complete).length;
+ let h=`<div class="banner ${late?'late':''}">${late?`You are ${n} day${n>1?'s':''} behind. Finish ${a.date} to unlock what comes next.`:a.date===S.today?'Finish every task today to unlock tomorrow.':'You are ahead of plan. Next up: '+a.date}</div>`+a.tasks.map(row).join('');
+ const nx=S.days.filter(d=>d.date>a.date).slice(0,3);
+ return h+(nx.length?'<h3>Locked until you finish the day above</h3>'+nx.map(d=>`<div class=lock>${d.date}: ${d.tasks.length} tasks</div>`).join(''):'')}
+function board(){const ds=['All',...S.depts];
+ const L=S.board.filter(p=>dept==='All'||p.dept===dept).sort((a,b)=>b.pct-a.pct);
+ return '<div class=chips>'+ds.map(d=>`<button class="chip ${d===dept?'on':''}" onclick="dept='${d.replace(/'/g,'')}';render()">${esc(d)}</button>`).join('')+'</div>'+
+ L.map((p,i)=>`<div class="p ${p.me?'me':''}"><div class=rk>${i+1}</div><div class=pn><b>${esc(p.name)}</b><small>${esc(p.dept)}</small><div class=bar><i style="width:${p.pct}%"></i></div>
+ <span class="tag ${p.behind?'l':''}">${p.behind?p.behind+' day'+(p.behind>1?'s':'')+' behind':'on pace'}</span>${p.ahead?`<span class="tag g">${p.ahead} ahead</span>`:''}<span class=tag>${p.streak} day streak</span><span class=tag>today ${p.tDone}/${p.tTotal}</span></div><div class=pct>${p.pct}%</div></div>`).join('')||'<p>Nobody here yet.</p>'}
+function plan(){return `<p>Paste your plan (copy the rows straight from a Sheet). Columns: <b>Day, Department, Person (optional email), Task, Target, Unit</b>. Day 1 is the start date; weekends are skipped. Department: Product, Sales, Marketing, or ALL.</p>
+<input type=date id=st value="${S.today}"><textarea id=tx rows=9 placeholder="1\tSales\t\tSend follow-ups\t20\temails\n1\tProduct\t\tShip onboarding fix\t1\n2\tALL\t\tTeam review\t1"></textarea>
+<label><input type=checkbox id=rp> Replace the existing plan</label><br><button class=go onclick="imp(false)">Preview</button><button class=go id=ld onclick="imp(true)" hidden>Load plan</button><pre id=pv></pre>`}
+function imp(c){const f=OSRUN('scoreboard').withSuccessHandler(r=>{$('#pv').textContent=(c?'Loaded ':'Ready to load ')+r.count+' tasks'+(r.last?' through '+r.last:'')+'.\n'+Object.entries(r.byDept).map(([k,v])=>k+': '+v).join('\n')+(r.errors.length?'\nSkipped:\n'+r.errors.join('\n'):'');
+ $('#ld').hidden=!r.count||c;if(c)load()}).withFailureHandler(e=>$('#pv').textContent=e.message);f.api_import($('#tx').value,$('#st').value,$('#rp').checked,c)}
+function render(){if(tab==='plan'&&$('#tx')&&!busy)return;
+ $('#hn').textContent=S.me.name;$('#hs').textContent=S.me.dept;$('#n-plan').hidden=S.me.role!=='admin';
+ ['today','board','plan'].forEach(t=>$('#n-'+t).classList.toggle('on',t===tab));
+ $('#app').innerHTML=tab==='today'?mine():tab==='board'?board():plan()}
+load();setInterval(()=>{if(document.visibilityState==='visible'&&tab!=='plan')load()},30000);
+</script></body></html>

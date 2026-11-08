@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<!--OS_BOOT-->
+<script>
+/* Cogwell platform bridge: lets every page keep its original google.script.run code. */
+window.OSRUN = function (mod) {
+  function make(ok, no) {
+    return new Proxy({}, {
+      get: function (_, k) {
+        if (k === 'then') return undefined;
+        if (k === 'withSuccessHandler') return function (f) { return make(f, no); };
+        if (k === 'withFailureHandler') return function (f) { return make(ok, f); };
+        if (k === 'withUserObject') return function () { return make(ok, no); };
+        return function () {
+          var args = Array.prototype.slice.call(arguments);
+          google.script.run
+            .withSuccessHandler(function (raw) {
+              var o;
+              try { o = JSON.parse(raw); } catch (e) { if (no) no(e); return; }
+              if (o.err) {
+                if (o.err === 'Not signed in') window.OS_expired && window.OS_expired();
+                if (no) no({ message: o.err, name: 'Error' });
+              } else if (ok) { ok(o.v); }
+            })
+            .withFailureHandler(function (e) { if (no) no(e); })
+            .osApi(window.OS_TOKEN || '', mod, String(k), JSON.stringify(args));
+        };
+      }
+    });
+  }
+  return make(null, null);
+};
+window.OS_expired = function () {
+  if (document.getElementById('os-expired')) return;
+  var d = document.createElement('div'); d.id = 'os-expired';
+  d.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99999;background:#b42318;color:#fff;padding:10px 16px;font:600 14px system-ui,sans-serif;text-align:center';
+  d.textContent = 'Your session expired. Reload this page and sign in again.';
+  document.body.appendChild(d);
+  try { parent.postMessage({ cogwell: 'signedout' }, '*'); } catch (e) {}
+};
+</script>
+<base target="_top"><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+nav button.hide{display:none}
+:root{--bg:#f3f5f7;--card:#fff;--ink:#17212b;--mute:#66727e;--line:#d9dfe5;--go:#1b6bff;--warn:#b4442b;color-scheme:light dark}
+@media(prefers-color-scheme:dark){:root{--bg:#12181e;--card:#1b232b;--ink:#e8edf1;--mute:#94a1ad;--line:#2d3944;--go:#6ea8ff;--warn:#e27a62}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,sans-serif}
+main{max-width:640px;margin:0 auto;padding:16px}
+nav{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--line)}
+nav button{background:none;border:0;padding:10px 12px;color:var(--mute);font:inherit;cursor:pointer;border-bottom:2px solid transparent}
+nav button.on{color:var(--ink);border-color:var(--go);font-weight:600}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:12px}
+h2{margin:0 0 2px;font-size:22px}.mute{color:var(--mute);font-size:13px}
+textarea,input{width:100%;font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px}
+textarea{min-height:140px;font-size:17px;line-height:1.45;resize:vertical}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+button.b{font:inherit;padding:10px 14px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+button.go{background:var(--go);border-color:var(--go);color:#fff;font-weight:600;flex:1 1 200px;font-size:16px}
+button.warn{color:var(--warn)}button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid var(--go);outline-offset:2px}
+.bar{height:6px;background:var(--line);border-radius:3px;margin:6px 0 14px;overflow:hidden}.bar i{display:block;height:100%;background:var(--go)}
+.tag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:99px;background:var(--bg);border:1px solid var(--line);margin-right:6px}
+.hide{display:none}.tpl{margin-bottom:12px}
+</style><style id="cw-skin">@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
+:root,.dark{color-scheme:light;--primary:#1b6bff!important;--primary-foreground:#fff!important;--accent:#6ea8ff!important;--accent-foreground:#0f2347!important;--font-display:'Outfit',ui-sans-serif,system-ui,sans-serif!important}
+html,body,button,input,select,textarea{font-family:'Outfit',system-ui,sans-serif!important}
+body{background:#fff!important;color:#0f2347!important}
+body::before{content:"";position:fixed;left:0;right:0;bottom:0;height:58vh;z-index:-1;pointer-events:none;background:repeating-linear-gradient(90deg,rgba(255,255,255,.22) 0 44px,rgba(255,255,255,0) 44px 88px),linear-gradient(180deg,rgba(255,255,255,0) 0,#dbe8ff 38%,#86adff 72%,#2f6bff 100%)}
+h1,h2,h3,h4{color:#0f2347!important;font-family:'Outfit',system-ui,sans-serif!important;letter-spacing:-.02em}
+h1{text-transform:uppercase;font-weight:800!important}
+a{color:#1b6bff}
+button:not([class*=tab]):not([class*=ghost]):not([class*=alt]):not([class*=link]):not([class*=icon]):not([class*=chip]),.btn:not(.alt),input[type=submit],input[type=button]{background:linear-gradient(180deg,#4b8bff,#1b62f0)!important;color:#fff!important;border:0!important;border-radius:9999px!important;box-shadow:0 8px 18px rgba(27,107,255,.35),inset 0 1px 0 rgba(255,255,255,.35)}
+input,select,textarea{background:rgba(255,255,255,.92)!important;color:#0f2347!important;border:1px solid #d9e3f5!important;border-radius:12px!important}
+input[type=checkbox],input[type=radio]{accent-color:#1b6bff}
+th{background:#eef3fc!important;color:#0f2347!important}td,th{border-color:#d9e3f5!important}
+.card,.panel,.box,.tile,.kpi,[class*="card"]{background:rgba(255,255,255,.74)!important;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.9)!important;border-radius:20px!important;box-shadow:0 10px 30px rgba(15,35,71,.10)!important}
+</style></head><body><main>
+<nav id="nav"></nav>
+ 
+<section id="queue"></section>
+ 
+<section id="imp" class="hide">
+ <div class="card"><h2>Import leads</h2>
+ <p class="mute">CSV with a header row. Columns: business, owner, trade, city, phone, notes. Only SA mobile numbers are kept. Duplicates are skipped.</p>
+ <input type="file" id="file" accept=".csv,text/csv"><div id="impmsg" class="mute" style="margin-top:10px"></div></div>
+</section>
+ 
+<section id="tpl" class="hide">
+ <div class="card"><h2>Templates</h2>
+ <p class="mute">Placeholders: {owner} {business} {trade} {city} {me}. Touch 1 is the first message, 2 to 4 are follow-ups. Add several variants per touch to test openers.</p>
+ <div id="tpls"></div>
+ <div class="row"><button class="b" id="addtpl">Add variant</button><button class="b go" id="savetpl">Save templates</button></div></div>
+</section>
+ 
+<section id="set" class="hide">
+ <div id="adm">
+ <div class="card"><h2>Accounts</h2>
+ <p class="mute">Numbers, caps and who can use each one are set in the Accounts and Team tabs of the Sheet. Caps ramp up automatically for new numbers.</p>
+ <div id="accs" class="mute">Loading...</div><div id="stats" class="mute" style="margin-top:14px"></div></div>
+ <div class="card"><h2>Message changer</h2>
+ <p class="mute">Test messages by switching them on a schedule, then keep the ones that get replies.</p>
+ <select id="mode" style="width:100%;font:inherit;padding:10px;border-radius:8px;background:var(--bg);color:inherit;border:1px solid var(--line)"><option value="daily">Change daily: one variant per touch each day</option><option value="split">Split evenly: all variants at once</option></select>
+ <div id="today" class="mute" style="margin:10px 0"></div>
+ <div class="row"><button class="b" id="nextmsg">Switch to the next message now</button><button class="b go" id="savemode">Save</button></div></div>
+ </div>
+ <div class="card"><h2>Results by message</h2><div id="res" class="mute">Loading...</div></div>
+ <div class="card"><h2>Log replies</h2><p class="mute">Log replies, bookings and STOP messages here. Press STOP the same day anyone asks not to be contacted. This feeds the results above.</p><div id="rec" class="mute">Loading...</div></div>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+let S={queue:[],i:0,templates:[],settings:{},sentToday:0,stats:{}}, cur=null;
+const tabs=[['queue','Queue'],['imp','Import'],['tpl','Templates'],['set','Settings']];
+$('nav').innerHTML=tabs.map(t=>`<button data-t="${t[0]}">${t[1]}</button>`).join('');
+$('nav').onclick=e=>{const t=e.target.dataset.t;if(t)show(t)};
+function show(t){tabs.forEach(x=>{$(x[0]).classList.toggle('hide',x[0]!==t)});[...$('nav').children].forEach(b=>b.classList.toggle('on',b.dataset.t===t));if(t==='tpl')drawTpls();if(t==='set')drawSet()}
+const run=(fn,...a)=>new Promise((ok,no)=>OSRUN('linkqueue').withSuccessHandler(ok).withFailureHandler(no)[fn](...a));
+async function load(){S={...S,...await run('getState'),i:0};applyRole();drawQueue()}
+function applyRole(){const a=S.user&&S.user.admin;[...$('nav').children].forEach(b=>{if(['imp','tpl'].includes(b.dataset.t))b.classList.toggle('hide',!a)});$('adm').classList.toggle('hide',!a)}
+ 
+function hash(id){return parseInt(String(id).slice(0,4),16)||0}
+function dayIdx(){const d=new Date();return Math.floor((d.getTime()-d.getTimezoneOffset()*6e4)/864e5)+(Number(S.settings.offset)||0)}
+function pickTpl(l){const n=l.touch+1,list=S.templates.filter(t=>t.touch===n);if(!list.length)return null;return list[(S.settings.mode==='split'?hash(l.id):dayIdx())%list.length]}
+function fill(b,l){const m={owner:(l.owner||'').split(' ')[0]||'there',business:l.business||'your business',trade:(l.trade||'').toLowerCase()||'service',city:l.city||'your area',me:S.settings.me||''};return b.replace(/\{(\w+)\}/g,(x,k)=>k in m?m[k]:x)}
+ 
+function drawQueue(){
+ const q=$('queue'),cap=Number(S.settings.cap)||15,l=S.queue[S.i];cur=null;
+ const head=`<div class="mute">Sent today: ${S.sentToday} of ${cap} &nbsp;|&nbsp; ${S.dueCount} follow-ups due, ${S.freshCount} new</div><div style="margin:6px 0">${(S.accounts||[]).map(a=>`<span class="tag">${esc(a.label)} ${a.used}/${a.cap}</span>`).join('')}</div><div class="bar"><i style="width:${Math.min(100,S.sentToday/cap*100)}%"></i></div>`;
+ if(!(S.accounts||[]).length){q.innerHTML=head+'<div class="card"><h2>No WhatsApp account assigned</h2><p class="mute">Ask the admin to add your email to an account in the Accounts tab.</p></div>';return}
+ if(S.sentToday>=cap){q.innerHTML=head+'<div class="card"><h2>Done for today</h2><p class="mute">You hit your daily cap. Raise it in Settings only when replies justify it.</p></div>';return}
+ if(!l){q.innerHTML=head+'<div class="card"><h2>Queue is empty</h2><p class="mute">Import leads, or come back when follow-ups are due.</p></div>';return}
+ const t=pickTpl(l),acc=(S.accounts||[]).find(a=>a.id===l.account_id)||{label:l.account_id||'?',phone:''};
+ if(!t){q.innerHTML=head+`<div class="card"><h2>No template for touch ${l.touch+1}</h2><p class="mute">Add one in Templates.</p></div>`;return}
+ q.innerHTML=head+`<div class="card"><h2>${esc(l.business||'Unnamed business')}</h2>
+ <div class="mute">${esc([l.owner,l.trade,l.city].filter(Boolean).join(', '))} &middot; +${l.phone}</div>
+ <div style="margin:8px 0"><span class="tag">Touch ${l.touch+1}</span><span class="tag">Variant ${t.variant}</span></div>
+ ${l.notes?`<div class="mute" style="margin-bottom:8px">${esc(l.notes)}</div>`:''}
+ <div class="row" style="margin:0 0 8px"><span class="tag" style="font-size:14px;color:var(--go)">Send from ${esc(acc.label)}${acc.phone?' (+'+esc(acc.phone)+')':''}</span></div>
+ <textarea id="msg">${esc(fill(t.body,l))}</textarea>
+ <div class="row"><button class="b go" id="open">Open in WhatsApp ${esc(acc.label)} (A)</button></div>
+ <div class="row"><button class="b" id="sent">Mark sent (S)</button><button class="b" id="skip">Skip (K)</button>
+ <button class="b warn" id="bad">Bad number (B)</button><button class="b warn" id="dnc">Do not contact (D)</button></div></div>`;
+ cur={...l,t,orig:fill(t.body,l)};
+ $('open').onclick=openWa;$('sent').onclick=sent;$('skip').onclick=()=>{S.i++;drawQueue()};
+ $('bad').onclick=()=>status('bad_number');$('dnc').onclick=()=>status('dnc');
+ setTimeout(()=>$('open').focus(),0);
+}
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function openWa(){if(!cur)return;window.open('https://wa.me/'+cur.phone+'?text='+encodeURIComponent($('msg').value),'_blank')}
+async function sent(){if(!cur)return;const m=$('msg').value,c=cur;S.i++;S.sentToday++;{const a=(S.accounts||[]).find(x=>x.id===c.account_id);if(a)a.used++}drawQueue();try{await run('markSent',c.id,c.t.variant,m,m!==c.orig)}catch(e){alert('Could not log that send: '+e.message)}}
+async function status(s){if(!cur)return;const c=cur;S.i++;drawQueue();try{await run('setStatus',c.id,s)}catch(e){alert('Could not update lead: '+e.message)}}
+document.addEventListener('keydown',e=>{if(e.target.tagName==='TEXTAREA'||e.target.tagName==='INPUT'||$('queue').classList.contains('hide')||!cur)return;
+ const k=e.key.toLowerCase();if(k==='a')openWa();else if(k==='s')sent();else if(k==='k'){S.i++;drawQueue()}else if(k==='b')status('bad_number');else if(k==='d')status('dnc')});
+ 
+// import
+function csv(t){const r=[];let row=[],c='',q=false;for(let i=0;i<t.length;i++){const ch=t[i];if(q){if(ch=='"'&&t[i+1]=='"'){c+='"';i++}else if(ch=='"')q=false;else c+=ch}else if(ch=='"')q=true;else if(ch==','){row.push(c);c=''}else if(ch=='\n'||ch=='\r'){if(ch=='\r'&&t[i+1]=='\n')i++;row.push(c);r.push(row);row=[];c=''}else c+=ch}if(c||row.length){row.push(c);r.push(row)}return r}
+$('file').onchange=async e=>{const f=e.target.files[0];if(!f)return;const rows=csv(await f.text()).filter(r=>r.some(x=>x.trim()));const h=rows.shift().map(x=>x.trim().toLowerCase());
+ const col=(...n)=>h.findIndex(x=>n.includes(x));const ix={business:col('business','name','company'),owner:col('owner','contact','owner_name'),trade:col('trade','category','industry'),city:col('city','area'),phone:col('phone','number','mobile','phone_raw'),notes:col('notes')};
+ if(ix.phone<0){$('impmsg').textContent='No phone column found. Add a column named phone.';return}
+ const list=rows.map(r=>Object.fromEntries(Object.entries(ix).map(([k,i])=>[k,i<0?'':(r[i]||'').trim()])));
+ $('impmsg').textContent='Importing '+list.length+' rows...';
+ try{const o=await run('importLeads',list);$('impmsg').textContent=`Added ${o.added}. Skipped ${o.dup} duplicates and ${o.bad} without a valid SA mobile number.`;load()}catch(err){$('impmsg').textContent='Import failed: '+err.message}};
+ 
+// templates
+function drawTpls(){$('tpls').innerHTML=S.templates.map((t,i)=>`<div class="tpl"><div class="row" style="margin:0 0 6px"><input style="width:90px" type="number" min="1" max="4" value="${t.touch}" data-i="${i}" data-f="touch" aria-label="Touch"><input style="width:90px" value="${esc(t.variant)}" data-i="${i}" data-f="variant" aria-label="Variant"><button class="b warn" data-del="${i}">Remove</button></div><textarea style="min-height:90px;font-size:15px" data-i="${i}" data-f="body">${esc(t.body)}</textarea></div>`).join('')}
+$('tpls').oninput=e=>{const d=e.target.dataset;if(d.f)S.templates[d.i][d.f]=d.f==='touch'?Number(e.target.value):e.target.value};
+$('tpls').onclick=e=>{if(e.target.dataset.del!==undefined){S.templates.splice(e.target.dataset.del,1);drawTpls()}};
+$('addtpl').onclick=()=>{S.templates.push({touch:1,variant:'C',body:''});drawTpls()};
+$('savetpl').onclick=async()=>{await run('saveTemplates',S.templates);alert('Templates saved');load()};
+ 
+// settings
+async function drawSet(){drawAccs();
+ const st=S.stats,n=k=>st[k]||0;$('stats').textContent=`Leads: ${n('new')} new, ${n('active')} in sequence, ${n('exhausted')} finished, ${n('bad_number')} bad numbers, ${n('dnc')} do-not-contact.`;$('mode').value=S.settings.mode||'daily';drawToday();drawRes()}
+async function drawAccs(){if(!(S.user&&S.user.admin))return;try{const a=await run('getAccountsOverview');$('accs').innerHTML='<table style="width:100%;border-collapse:collapse"><tr><th align="left">Account</th><th align="left">Rep</th><th align="right">Today</th><th align="right">7d replies</th></tr>'+a.map(x=>{const r=x.sent7?x.replies7/x.sent7*100:null;return `<tr><td>${esc(x.label)}${x.phone?' +'+esc(x.phone):''}${x.status!=='active'?' ('+esc(x.status)+')':''}</td><td>${esc(x.rep)}</td><td align="right">${x.used}/${x.cap}</td><td align="right">${r===null?'-':r.toFixed(0)+'%'}${x.sent7>=30&&r<8?' (check health)':''}</td></tr>`}).join('')+'</table>'}catch(e){$('accs').textContent='Could not load: '+e.message}}
+ 
+function drawToday(){const m=$('mode').value;$('today').textContent=m==='split'?'All variants are in use at once.':'Today: '+[1,2,3,4].map(n=>{const l=S.templates.filter(t=>t.touch===n);return l.length?`touch ${n} uses variant ${l[dayIdx()%l.length].variant}`:null}).filter(Boolean).join(', ')+'.'}
+async function drawRes(){try{const [r,c]=await Promise.all([run('getResults'),run('getRecent')]);
+ const tot=r.reduce((a,x)=>({s:a.s+x.sent,r:a.r+x.replies,b:a.b+x.booked}),{s:0,r:0,b:0}),leadsN=Object.values(S.stats).reduce((a,b)=>a+b,0),bad=S.stats.bad_number||0;
+ const health=tot.s?`<div style="margin-bottom:10px">Reply rate <b>${(tot.r/tot.s*100).toFixed(1)}%</b> (healthy 10-20%) &middot; Booked per 100 sends <b>${(tot.b/tot.s*100).toFixed(1)}</b> (about 4) &middot; Bad numbers <b>${leadsN?(bad/leadsN*100).toFixed(1):0}%</b> of leads (under 10%)</div>`:'';
+ $('res').innerHTML=r.length?health+'<table style="width:100%;border-collapse:collapse">'+'<tr><th align="left">Message</th><th align="right">Sent</th><th align="right">Replies</th><th align="right">Booked</th><th align="right">Rate</th></tr>'+r.map(x=>{const rate=x.replies/x.sent*100;return `<tr><td>Touch ${x.touch}, variant ${esc(x.variant)}</td><td align="right">${x.sent}</td><td align="right">${x.replies}</td><td align="right">${x.booked}</td><td align="right">${rate.toFixed(1)}%${x.sent<30?' (too early)':rate<8?' (retire?)':''}</td></tr>`}).join('')+'</table>':'No sends yet.';
+ $('rec').innerHTML=c.length?c.map(x=>`<div class="row" style="align-items:center;margin:0 0 6px"><span style="flex:1">${esc(x.business||'Unnamed')} <span class="tag">T${x.touch} ${esc(x.variant)}</span>${x.replied?'<span class="tag">replied</span>':''}</span>${x.replied?'':`<button class="b" data-r="${x.id}">Replied</button>`}<button class="b" data-b="${x.id}">Booked</button><button class="b warn" data-d="${x.id}">STOP</button></div>`).join(''):'Nobody to log yet.'}catch(e){$('res').textContent='Could not load results: '+e.message}}
+$('rec').onclick=async e=>{const d=e.target.dataset;if(!(d.r||d.b||d.d))return;e.target.disabled=true;try{if(d.r)await run('markReplied',d.r);else if(d.b)await run('markBooked',d.b);else await run('setStatus',d.d,'dnc')}catch(err){alert('Could not update: '+err.message)}await load();drawRes()};
+$('mode').onchange=drawToday;
+$('nextmsg').onclick=async()=>{S.settings.offset=(Number(S.settings.offset)||0)+1;S.settings.mode=$('mode').value;await run('saveSettings',S.settings);drawToday();drawQueue()};
+$('savemode').onclick=async()=>{S.settings.mode=$('mode').value;await run('saveSettings',S.settings);drawToday();drawQueue();alert('Message changer saved')};
+show('queue');load().catch(e=>$('queue').innerHTML='<div class="card"><h2>Could not load</h2><p class="mute">'+esc(e.message)+'</p></div>');
+</script></body></html>
